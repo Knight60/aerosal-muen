@@ -1,464 +1,484 @@
-function bodyLoaded(pageLoaded = () => { }) {
-    w3.includeHTML(() => {
-        ActivateMenu();
-        CreateMap();
-        Main();
-        pageLoaded();
-        if (document.location.pathname.endsWith("ai-spatial.html")) {
-            globalThis.PivotMode = "AreaRai";
-            createPivot("PRV", null, "ภาพรวมประเทศ");
-            createDropdown("https://aigreen.dcce.go.th/rest/BBoxProvince", '#selectProvince', 'prov_code', 'prov_namt');
-        }
-    });
+let z = 5;
+let ext = 0.01;
+//let longitude = 104.6208500000000;
+//let latitude = 15.897682067553923;
+
+let longitude = 99.15552547451955 - 0.0003;
+let latitude = 14.128423673875403 + 0.0008;
+
+let xmin = longitude - ext;
+let xmax = longitude + ext;
+let ymin = latitude - ext;
+let ymax = latitude + ext;
+
+let extent = Cesium.Rectangle.fromDegrees(xmin, ymin, xmax, ymax);
+var local = document.location.href.startsWith('http://local');
+//var gcloud = 'https://storage.cloud.google.com/muka-3d.appspot.com'; // Authenicated Only
+var gcloud = 'https://storage.googleapis.com/muka-3d.appspot.com'; // Publick URL
+
+
+Cesium.Ion.defaultAccessToken =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjNiMDUzYi1iZDVmLTQ5NzItOWVlNy03MWZkYjAxNGIzZmMiLCJpZCI6ODU1NTIsImlhdCI6MTY0NzEwMDczMX0.iiAAYF3zGdCrP255yIjT3XQMrOHizEIeLPpw11Abjbk";
+Cesium.Camera.DEFAULT_VIEW_RECTANGLE = extent;
+Cesium.Camera.DEFAULT_VIEW_FACTOR = 0;
+
+function LookAtRelease() {
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+let Models = {};
+let Home = {
+    //Center: Models[Object.keys(Models)[0]].Center, // for model
+    Position: {
+        "x": -1364625.1261613488,
+        "y": 7727263.116251796,
+        "z": 187328.03914283938
+    },
+    Orientation: {
+        "heading": 0.030061505197433114,
+        "pitch": -0.9274696859465843,
+        "roll": 6.283131817330824
+    },
+    Rotate: -1, //-1 = counter-clockwise; +1 would be clockwise
+    SMOOTHNESS: 1200, //it would make one full circle in roughly 600 frames
+};
+
+function NavigationResetAsHeadNorth() {
+    console.log("Navigation Reset AsHeadNorth");
+    let reset = document.querySelector('div[title="Reset View"]');
+    if (!reset) return; // no reset button of navigation plugin
+    var clone = reset.cloneNode(true);
+    clone.onclick = HeadNorth;
+    reset.parentNode.replaceChild(clone, reset);
 }
 
-function iframeLoaded(iframe) {
-    if (!iframe) return;
-    iframe.height = "";
-    iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
-
-}
-
-function ActivateMenu() {
-    let menus = Array.from(document.querySelectorAll("a.nav-link.collapsed"));
-    menus.filter((x) => x.href == document.location.href)
-        .map((x) => x.classList.remove('collapsed'));
-}
-
-function CreateMap() {
-    //epsg.io //notworking
-    //proj4.defs("EPSG:32647", "+proj=utm +zone=47 +datum=WGS84 +units=m +no_defs +type=crs");
-    //ol.proj.proj4.register(proj4);
-    let epsg3857 = { proj: new ol.proj.get("EPSG:3857"), size: null, resolutions: null, matrixIds: null };
-    let epsg4326 = { proj: new ol.proj.get("EPSG:4326"), size: null, resolutions: null, matrixIds: null };
-
-    epsg3857.size = ol.extent.getTopLeft(epsg3857.proj.getExtent()) / 256;
-    epsg3857.resolutions = new Array(19);
-    epsg3857.matrixIds = new Array(19);
-    for (let z = 0; z < 19; ++z) {
-        // generate resolutions and matrixIds arrays for this WMTS
-        epsg3857.resolutions[z] = epsg3857.size / Math.pow(2, z);
-        epsg3857.matrixIds[z] = z;
-    }
-    epsg4326.size = ol.extent.getTopLeft(epsg4326.proj.getExtent()) / 256;
-    epsg4326.resolutions = new Array(19);
-    epsg4326.matrixIds = new Array(19);
-    for (let z = 0; z < 19; ++z) {
-        // generate resolutions and matrixIds arrays for this WMTS
-        epsg4326.resolutions[z] = epsg4326.size / Math.pow(2, z);
-        epsg4326.matrixIds[z] = z;
-    }
-
-    var map = document.querySelector('#map');
-    if (!(map && map.tagName == "DIV")) return;
-    //************************************** */
-    var wmsUrl = 'https://aigreen.dcce.go.th/geoserver/aigreen/wms';
-    var wmtsUrl = 'https://aigreen.dcce.go.th/geoserver/gwc/service/wmts';
-    var xyzGreenLevel = 'https://earthengine.googleapis.com/v1/projects/ee-pisut-nakmuenwai/maps/fea9698b9349ce614d3de7fc0855d225-d25fc82b1784d874ab9aec7fd6b10e2e/tiles/{z}/{x}/{y}';
-
-    var gridsetName = 'UTM47WGS84Quad';
-    var gridNames = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
-    var style = '';
-    var format = 'image/png';
-    var infoFormat = 'text/html';
-    //overlay
-    const container = document.getElementById('popup');
-    const content = document.getElementById('popup-content');
-    const closer = document.getElementById('popup-closer');
-    const overlay = new ol.Overlay({
-        element: container,
-        autoPan: {
-            animation: {
-                duration: 250,
-            },
-        },
-    });
-    closer.onclick = function () {
-        overlay.setPosition(undefined);
-        closer.blur();
-        return false;
-    };
-
-
-    function XYZ(baseUrl) {
-        return new ol.layer.Tile({
-            source: new ol.source.XYZ({
-                url: baseUrl,
-                projection: epsg4326.proj,
-            }),
-        })
-    }
-    //https://aigreen.dcce.go.th/geoserver/gwc/demo
-
-    function WMS(baseUrl, layers, projection, visible, filter) {
-        return new ol.layer.Tile({
-            visible: visible,
-            source: new ol.source.TileWMS({
-                url: baseUrl,
-                projection: projection.proj,
-                serverType: 'geoserver',
-                params: {
-                    FORMAT: format,
-                    VERSION: '1.1.1',
-                    tiled: true,
-                    STYLES: '',
-                    LAYERS: layers,
-                    exceptions: 'application/vnd.ogc.se_inimage',
-                    transition: 0,
-                    filter: filter,
-                }
-            })
+async function ImportModel(ModelID, flyTo) {
+    Loading.style.display = 'inline';
+    var ModelConfig = Models[ModelID];
+    console.log('Loading Model');
+    //try {
+    const heading = Cesium.Math.toRadians(180);
+    const hpr = new Cesium.HeadingPitchRoll(heading, 0, 0);
+    if (ModelConfig.Type == "gltf") {
+        var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(ModelConfig.Center, hpr);
+        ModelConfig.Model = await Cesium.Model.fromGltfAsync({
+            id: ModelID,
+            url: ModelConfig.URL,
+            modelMatrix: modelMatrix,
+            upAxis: Cesium.Axis.Y,
+            forwardAxis: Cesium.Axis.Z,
         });
-    };
+    } else {
+        const offset = new Cesium.Cartesian3(ModelConfig.Offset.North, ModelConfig.Offset.East, ModelConfig.Offset.Height);
+        const transform = Cesium.Matrix4.fromTranslation(offset);
+        ModelConfig.Model = await Cesium.Cesium3DTileset.fromUrl(ModelConfig.URL, {
+            maximumScreenSpaceError: 1,
+            modelMatrix: transform,
+            //enablePick: true,
+        });
+    }
+    var tileset = viewer.scene.primitives.add(ModelConfig.Model);
     /*
-    //https://gist.github.com/ThomasG77/21192c7045ab8f50e22e
-    var gmap = new google.maps.Map(document.getElementById('gmap'), {
-        disableDefaultUI: true,
-        keyboardShortcuts: false,
-        draggable: false,
-        disableDoubleClickZoom: true,
-        scrollwheel: false,
-        streetViewControl: false
+    tileset.readyPromise.then(function (tileset) {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        // Position tileset
+        var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+        var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+        var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
+        var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+        console.log(tileset.modelMatrix);
     });
     */
-    //https://aigreen.dcce.go.th/geoserver/gwc/service/wmts
-    function WMTS(baseUrl, layerName, projection, visible) {
-        var gridsetName = 'EPSG:4326';
-        var gridNames = ['EPSG:4326:0', 'EPSG:4326:1', 'EPSG:4326:2', 'EPSG:4326:3', 'EPSG:4326:4', 'EPSG:4326:5', 'EPSG:4326:6', 'EPSG:4326:7', 'EPSG:4326:8', 'EPSG:4326:9', 'EPSG:4326:10', 'EPSG:4326:11', 'EPSG:4326:12', 'EPSG:4326:13', 'EPSG:4326:14', 'EPSG:4326:15', 'EPSG:4326:16', 'EPSG:4326:17', 'EPSG:4326:18'];
-        var baseUrl = 'https://aigreen.dcce.go.th/geoserver/gwc/service/wmts';
-        var style = '';
-        var format = 'image/png';
-        var infoFormat = 'text/html';
-        var layerName = 'aigreen:AiGreenTypes';
-        var projection = new ol.proj.Projection({
-            code: 'EPSG:4326',
-            units: 'degrees',
-            axisOrientation: 'neu'
+    console.log(ModelConfig.Model);
+    console.log('Loaded Primitive Model');
+
+    //viewer.zoomTo(ModelConfig.Model);
+    //viewer.camera.lookAt(Home.Center, Home.HPR);
+    //HeadNorth();
+    //MoveAround();
+    SceneRefresh();
+    console.log('finished');
+
+    Loading.style.display = 'none';
+    if (flyTo) {
+        viewer.scene.camera.flyTo({ //not equalto viewer.flyTo
+            destination: ModelConfig.Position,
+            orientation: ModelConfig.Orientation
         });
-        var resolutions = [0.703125, 0.3515625, 0.17578125, 0.087890625, 0.0439453125, 0.02197265625, 0.010986328125, 0.0054931640625, 0.00274658203125, 0.001373291015625, 6.866455078125E-4, 3.4332275390625E-4, 1.71661376953125E-4, 8.58306884765625E-5, 4.291534423828125E-5, 2.1457672119140625E-5, 1.0728836059570312E-5, 5.364418029785156E-6, 2.682209014892578E-6];
-        baseParams = ['VERSION', 'LAYER', 'STYLE', 'TILEMATRIX', 'TILEMATRIXSET', 'SERVICE', 'FORMAT'];
-
-        params = {
-            'VERSION': '1.0.0',
-            'LAYER': layerName,
-            'STYLE': style,
-            'TILEMATRIX': gridNames,
-            'TILEMATRIXSET': gridsetName,
-            'SERVICE': 'WMTS',
-            'FORMAT': format
-        };
-
-        function constructSource() {
-            var url = baseUrl + '?'
-            for (var param in params) {
-                if (baseParams.indexOf(param.toUpperCase()) < 0) {
-                    url = url + param + '=' + params[param] + '&';
-                }
-            }
-            url = url.slice(0, -1);
-
-            var source = new ol.source.WMTS({
-                url: url,
-                layer: params['LAYER'],
-                matrixSet: params['TILEMATRIXSET'],
-                format: params['FORMAT'],
-                projection: projection,
-                tileGrid: new ol.tilegrid.WMTS({
-                    tileSize: [256, 256],
-                    extent: [-180.0, -90.0, 180.0, 90.0],
-                    origin: [-180.0, 90.0],
-                    resolutions: resolutions,
-                    matrixIds: params['TILEMATRIX']
-                }),
-                style: params['STYLE'],
-                wrapX: true
-            });
-            return source;
-        }
-
-        return layer = new ol.layer.Tile({
-            visible: visible,
-            source: constructSource()
-        });
-
-    };
-
-    globalThis.Layers = {
-        OSM: new ol.layer.Tile({ source: new ol.source.OSM(), }),
-        Sentinel2RGB: WMS(wmsUrl, 'aigreen:Sentinel2-2023', epsg4326, false),
-        Sentinel1HHHV: WMS(wmsUrl, 'aigreen:Sentinel1-2023', epsg4326, false),
-        GreenClasses: WMS(wmsUrl, 'aigreen:AiGreenClassesTif', epsg4326, false),
-        GreenTypes: WMS(wmsUrl, 'aigreen:AiGreenTypesTIF', epsg4326, true),
-        //GreenTypes: WMTS(wmsUrl, 'aigreen:AiGreenTypes', epsg4326, false),
-        //Administration: WMS(wmsUrl, 'aigreen:Administration', epsg4326, true),
-        LocalAdmin: WMS(wmsUrl, 'aigreen:AiGreenDLA,aigreen:Administration', epsg4326, true,
-            //'<Filter><PropertyIsEqualTo><PropertyName>dla_code</PropertyName><Literal>06740116</Literal></PropertyIsEqualTo></Filter>'
-        ),
-        FieldTags: WMS(wmsUrl, 'aigreen:FieldDataPlots,aigreen:FieldDataTags', epsg4326, true),
-    };
-
-    globalThis.OLMap = new ol.Map({
-        target: 'map',
-        overlays: [overlay],
-        layers: Object.values(globalThis.Layers),
-        view: new ol.View({ projection: epsg4326.proj })
-    });
-    var extent = window.location.hash.slice(1).split(',');
-    if (extent.length == 3) {
-        try {
-            extent = extent.map(x => parseFloat(x));
-            globalThis.OLMap.getView().setZoom(extent[0]);
-            globalThis.OLMap.getView().setCenter([extent[1], extent[2]]);
-        } catch (error) { console.log(error) }
-    } else {
-        var bounds = [96.6928914535875, 5.122222768581152, 106.19285393883509, 21.402443793019795];
-        globalThis.OLMap.getView().fit(bounds, globalThis.OLMap.getSize());
     }
-    globalThis.OLMap.on('singleclick', function (evt) {
-        //document.getElementById('info').innerHTML = '';
-        const viewResolution = /** @type {number} */ (globalThis.OLMap.getView().getResolution());
-        const wms = WMS(wmsUrl, 'aigreen:AiGreenTypes', epsg4326, false);
-        console.log(wms);
-        const cols = 'gtype,prov_code,amp_code,tam_code,prov_namt,amp_namt,tam_namt,dla_code,dla_type,dla_name,area_rai,coabsorb';
-        const url = wms.getSource().getFeatureInfoUrl(
-            evt.coordinate,
-            viewResolution,
-            'EPSG:4326',
-            { 'INFO_FORMAT': 'application/json', "EXCEPTION": 'application/json', 'PROPERTYNAME': cols }
-        );
-        if (url) {
-            console.log(evt);
-            if (evt.originalEvent.ctrlKey) {
-                closer.onclick();
-                window.open(url);
-            } else {
-                fetch(url)
-                    .then((response) => response.json())
-                    .then((json) => {
-                        if (json.features.length == 0) {
-                            closer.onclick();
-                            return;
-                        }
-                        console.log(json);
-                        let props = Object.assign({}, { id: json.features[0].id }, json.features[0].properties);
-                        let rows = Object.keys(props).map((k) => "<tr><td><b>" + k + " </b></td><td>:&nbsp;&nbsp;</td><td>"
-                            + props[k].toLocaleString("en-US", { maximumFractionDigits: 2 }) + "</td></tr>").join('')
-                        content.innerHTML = "<table>" + rows + "</table>";
-                        overlay.setPosition(evt.coordinate);
-                    });
-            }
-        }
-    });
-    globalThis.OLMap.on("moveend", ev => {
-        //window.location.hash = globalThis.OLMap.getView().calculateExtent(globalThis.OLMap.getSize()).join(',');
-        var view = globalThis.OLMap.getView();
-        window.location.hash = view.getZoom() + ',' + view.getCenter().join(',');
-    })
+    //} catch (error) {
+    //    console.log(`Failed to load model. ${error}`);
+    //}
 }
 
-function ToggleLayer(button) {
-    console.log(button);
-    var name = button.getAttribute('name');
-    var status = button.getAttribute('status') == 'true';
-    var layer = globalThis.Layers[name];
-    console.log(layer.getVisible(), status);
 
-    status = !status;
-    layer.setVisible(status);
-    button.setAttribute('status', status);
-    button.style.backgroundColor = status ? '#3d8c14' : null;
-
-}
-
-async function createDropdown(url, target, value, text) {
-    const response = await fetch(url);
-    const records = await response.json();
-    //console.log(records);
-    let sel = document.querySelector(target);
-    clearOptions(sel);
-    sel.value = "all";
-    records.forEach((record) => {
-        let opt = document.createElement('option');
-        opt.setAttribute(value, record[value]);
-        opt.innerText = record[text];
-        opt.setAttribute('XMin', record.XMin);
-        opt.setAttribute('YMin', record.YMin);
-        opt.setAttribute('XMax', record.XMax);
-        opt.setAttribute('YMax', record.YMax);
-        sel.appendChild(opt);
-    });
-    if (target == '#selectAmphoe') {
-        let tam = document.querySelector("#selectTambon");
-        tam.value = "all";
-        clearOptions(tam);
-    }
-}
-
-function clearOptions(sel) {
-    var i, L = sel.options.length - 1;
-    for (i = L; i >= 1; i--) {
-        sel.remove(i);
-    }
-}
-
-function changeExcent(opt) {
-    let xmin = parseFloat(opt.getAttribute('xmin'));
-    let ymin = parseFloat(opt.getAttribute('ymin'));
-    let xmax = parseFloat(opt.getAttribute('xmax'));
-    let ymax = parseFloat(opt.getAttribute('ymax'));
-    OLMap.getView().fit([xmin, ymin, xmax, ymax], OLMap.getSize());
-}
-
-function changeProvince(sel) {
-    let opt = sel.selectedOptions[0];
-    var prv = opt.getAttribute("prov_code");
-    createPivot("PRV", prv, opt.text);
-    changeExcent(opt);
-    createDropdown("https://aigreen.dcce.go.th/rest/BBoxAmphoe?prov_code=like." + prv, '#selectAmphoe', 'amp_code', 'amp_namt');
-}
-
-function changeAmphoe(sel) {
-    let opt = sel.selectedOptions[0];
-    var amp = opt.getAttribute("amp_code");
-    createPivot("AMP", amp, opt.text);
-    changeExcent(opt);
-    createDropdown("https://aigreen.dcce.go.th/rest/BBoxTambon?amp_code=like." + amp, '#selectTambon', 'tam_code', 'tam_namt');
-}
-
-function changeTambon(sel) {
-    let opt = sel.selectedOptions[0];
-    var tam = opt.getAttribute("tam_code");
-    changeExcent(opt);
-}
-
-function tabAreaRai(tab) {
-    globalThis.PivotMode = 'AreaRai';
-    createPivot(globalThis.LastLevel, globalThis.LastValue, globalThis.LastLabel);
-}
-
-function tabCoAbsorb(tab) {
-    globalThis.PivotMode = 'CoAbsorb';
-    createPivot(globalThis.LastLevel, globalThis.LastValue, globalThis.LastLabel);
-}
-
-async function createPivot(level, value, label) {
-    globalThis.LastLevel = level;
-    globalThis.LastValue = value;
-    globalThis.LastLabel = label;
-    console.log(level, value);
-    let pivotURL = "https://aigreen.dcce.go.th/rest/AiGreenCluster_PivotPRV";
-    let headers = ['prov_code', 'prov_namt', 'arearai_P', 'arearai_MG', 'arearai_MP', 'arearai_S', 'arearai_E',
-        'arearai_NCO', 'arearai_NCM', 'arearai_NOO', 'arearai_NOM', 'arearai_W', 'arearai_Total', 'arearai_Overall'
-    ];
-    if (level == "PRV") {
-        if (value) {
-            pivotURL = "https://aigreen.dcce.go.th/rest/AiGreenCluster_PivotAMP?order=amp_code&prov_code=like." + value;
-            headers[0] = "amp_code";
-            headers[1] = "amp_namt";
-            document.querySelector('#AiGreenTitle').innerHTML = 'จังหวัด' + label;
-        } else {
-            pivotURL = "https://aigreen.dcce.go.th/rest/AiGreenCluster_PivotPRV?order=prov_code";
-            document.querySelector('#AiGreenTitle').innerHTML = 'ภาพรวมทั้งประเทศ';
-        }
-    } else if (level == "AMP") {
-        if (value) {
-            pivotURL = "https://aigreen.dcce.go.th/rest/AiGreenCluster_PivotTAM?order=tam_code&amp_code=like." + value;
-            headers[0] = "tam_code";
-            headers[1] = "tam_namt";
-            document.querySelector('#AiGreenTitle').innerHTML = 'อำเภอ' + label;
-        } else {
-            pivotURL = "https://aigreen.dcce.go.th/rest/AiGreenCluster_PivotAMP?order=amp_code&prov_code=like." + value;
-            headers[0] = "amp_code";
-            headers[1] = "amp_namt";
-            document.querySelector('#AiGreenTitle').innerHTML = 'จังหวัด' + label;
-        }
-
-    }
-    const response = await fetch(pivotURL);
-    const records = await response.json();
-    console.log(records);
-    console.log(PivotMode);
-    if (PivotMode == "CoAbsorb") { //AreaRai
-        headers = headers.map((x) => x.replace('arearai', 'coabsorb'));
-    }
-    CreateTableCarbon(records, headers);
-}
-
-function CreateTableCarbon(records, headers) {
-    let keycode = Object.keys(records[0]).filter((x) => x.endsWith('code'))[0];
-    heading = records.filter((x) => x[keycode] != ' ')
-        .map((x) => Object.entries(x))
-        .map((x) => x.filter((y) => headers.indexOf(y[0]) >= 0))
-        .map((x) => x.map((y) => y[0]))[0];
-
-    headers = headers.filter((y) => heading.indexOf(y) >= 0);
-    console.log(headers);
-    records = records.filter((x) => x[keycode] != ' ')
-        .map((x) => Object.fromEntries(headers.map((h) => [h, x[h]])))
-        .map((x) => Object.keys(x).map((k) => x[k] ? x[k].toLocaleString("en-US", { maximumFractionDigits: 2 }) : '-'));
-    let total = Array(records[0].length).fill(0);
-    total[0] = '';
-    total[1] = 'รวม';
-    for (var r = 0; r < records.length; r++) {
-        for (var c = 2; c < records[r].length; c++) {
-            val = records[r][c].replace(',', '');
-            total[c] += isNaN(val) ? 0 : parseFloat(val);
-        }
-    };
-    headers = headers.map((x) => x.split('_')[1].replace('code', 'รหัส').replace('namt', 'ชื่อ'));
-
-    total = total.map((y) => y ? y.toLocaleString("en-US", { maximumFractionDigits: 2 }) : '-');
-    records.push(total);
-
-
-    console.log(headers);
-    console.log(records);
-    //https://fiduswriter.github.io/simple-datatables/documentation/
-    if (globalThis.AiGreenTable.destroy) globalThis.AiGreenTable.destroy();
-    globalThis.AiGreenTable = new simpleDatatables.DataTable("#AiGreenTable", {
-        paging: false,
-        tabIndex: 1,
-        perPage: 10,
-        scrollY: "100%",
-        rowNavigation: true,
-        perPageSelect: [10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000],
-        data: {
-            "headings": headers,
-            "data": records,
+function Main(body) {
+    var CesiumViewer = document.querySelector("Viewer");
+    var viewer = new Cesium.Viewer("Viewer", {
+        terrain: Cesium.Terrain.fromWorldTerrain(),
+        //mapProjection: new Cesium.WebMercatorProjection(),
+        /* old version
+        terrainProvider: new Cesium.CesiumTerrainProvider({
+            url: Cesium.IonResource.fromAssetId(1),
+        }),
+        */
+        vrButton: true,
+        geocoder: false,
+        timeline: false,
+        animation: false,
+        baseLayerPicker: true,
+        selectionIndicator: false,
+        requestRenderMode: true, //fixed gpu too high
+        selectionIndicator: false,
+        //geocoder: new OpenStreetMapNominatimGeocoder(),
+        //imageryProvider: new Cesium.IonImageryProvider({ assetId: 3954 }),
+        //for using "viewer.render(); temp1.src = viewer.canvas.toDataURL();"
+        contextOptions: {
+            webgl: { preserveDrawingBuffer: true }
         },
-        columns: [{
-            select: 0,
-            sort: "asc",
-            type: "date",
-            format: "YYYY/DD/MM",
-        }],
+    });
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    //Switch to Sentinel-2 Image at first use
+    viewer.baseLayerPicker.viewModel.imageryProviderViewModels.forEach((x) => {
+        if (x.name == "Sentinel-2") {
+            viewer.baseLayerPicker.viewModel.selectedImagery = x;
+        }
+    });
+    /* //hide globe
+    viewer.scene.globe.show = false;
+    viewer.scene.skyAtmosphere.show = false;
+    viewer.scene.skyBox.show = false;
+    viewer.scene.sun.show = false;
+    viewer.scene.moon.show = false;
+
+    viewer.bottomContainer.style.display = "NONE"; //capitalized
+    viewer.fullscreenButton.container.style.display = "none"; //not capitalized
+    viewer.homeButton.container.style.display = "none";
+    viewer.navigationHelpButton.container.style.display = "none";
+    //viewer.timeline.container.style.display = "none";
+    /**/
+
+    viewer.extend(Cesium.viewerCesiumNavigationMixin, {});
+    NavigationResetAsHeadNorth();
+    /* Cesium Inspector
+    viewer.extend(Cesium.viewerCesiumInspectorMixin);
+    */
+    globalThis.viewer = viewer;
+    viewer.scene.globe.enableLighting = true;
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    viewer.scene.verticalExaggeration = 2.0;
+    viewer.scene.light = new Cesium.DirectionalLight({
+        direction: viewer.camera.directionWC, // Updated every frame
+        intensity: 1.0,
+    });
+    viewer.scene.globe.dynamicAtmosphereLighting = false;
+    updateMaterial(false);
+    //------------------------------------------
+    const imageryLayers = viewer.scene.imageryLayers;
+
+    // The viewModel tracks the state of our mini application.
+    const viewModel = {
+        brightness: 0,
+        contrast: 0,
+        hue: 0,
+        saturation: 0,
+        gamma: 0,
+    };
+    // Convert the viewModel members into knockout observables.
+    Cesium.knockout.track(viewModel);
+
+    // Bind the viewModel to the DOM elements of the UI that call for it.
+    const toolbar = document.getElementById("Toolbar");
+    Cesium.knockout.applyBindings(viewModel, toolbar);
+    subscribeLayerParameter(viewModel, "brightness");
+    subscribeLayerParameter(viewModel, "contrast");
+    subscribeLayerParameter(viewModel, "hue");
+    subscribeLayerParameter(viewModel, "saturation");
+    subscribeLayerParameter(viewModel, "gamma");
+    imageryLayers.layerAdded.addEventListener(() => {
+        updateViewModel(viewModel);
+    });
+    imageryLayers.layerRemoved.addEventListener(() => {
+        updateViewModel(viewModel);
+    });
+    imageryLayers.layerMoved.addEventListener(() => {
+        updateViewModel(viewModel);
+    });
+    updateViewModel(viewModel);
+    //------------------------------
+    viewer.toolbar = document.querySelector(".cesium-viewer-toolbar");
+    //------------------------------
+    /*
+    let toolModel = document.createElement("button");
+    toolModel.id = "ToggleModel";
+    toolModel.classList.add("cesium-button");
+    toolModel.classList.add("cesium-toolbar-button");
+    toolModel.classList.add("material-icons");
+    toolModel.innerHTML = "view_in_ar";
+    toolModel.onclick = ToggleModel;
+    viewer.toolbar.insertBefore(toolModel, viewer.toolbar.children[0]);
+    */
+    //------------------------------
+    let toolMoveAround = document.createElement("button");
+    toolMoveAround.id = "ToggleMoveAround";
+    toolMoveAround.classList.add("cesium-button");
+    toolMoveAround.classList.add("cesium-toolbar-button");
+    toolMoveAround.classList.add("material-icons");
+    toolMoveAround.innerHTML = "flip_camera_android";
+    toolMoveAround.onclick = ToggleMoveAround;
+    viewer.toolbar.insertBefore(toolMoveAround, viewer.toolbar.children[0]);
+    //------------------------------
+    let toolPan = document.createElement("button");
+    toolPan.id = "ToggleMovePan";
+    toolPan.classList.add("cesium-button");
+    toolPan.classList.add("cesium-toolbar-button");
+    toolPan.classList.add("material-icons");
+    toolPan.innerHTML = "pan_tool";
+    toolPan.onclick = TogglePan;
+    viewer.toolbar.insertBefore(toolPan, viewer.toolbar.children[0]);
+    //------------------------------
+    //*
+    let toolHome = document.createElement("button");
+    toolHome.id = "ToggleMoveAround";
+    toolHome.classList.add("cesium-button");
+    toolHome.classList.add("cesium-toolbar-button");
+    toolHome.classList.add("material-icons");
+    toolHome.innerHTML = "home";
+    toolHome.onclick = FlyToModel;
+    viewer.toolbar.insertBefore(toolHome, viewer.toolbar.children[0]);
+    /**/
+    /*
+    let toolFlyTo = document.createElement("select");
+    toolFlyTo.id = 'SelectFlyTo';
+    toolFlyTo.onchange = function (event) {
+        var ID = event.target.selectedOptions[0].value;
+        console.log(ID);
+        FlyToModel(ID);
+    };
+
+    var opt = document.createElement("option");
+    opt.value = null;//Overview
+    opt.innerHTML = "Overview";
+    toolFlyTo.appendChild(opt);
+    for (var ID of Object.keys(Models)) {
+        var opt = document.createElement("option");
+        opt.value = ID;
+        opt.innerHTML = Models[ID].Name;
+        toolFlyTo.appendChild(opt);
+    }
+    viewer.toolbar.insertBefore(toolFlyTo, viewer.toolbar.children[0]);
+    */
+
+
+    // Mouse over the globe to see the cartographic position
+    const entity = viewer.entities.add({
+        label: {
+            show: false,
+            showBackground: true,
+            font: "14px monospace",
+            horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+            verticalOrigin: Cesium.VerticalOrigin.TOP,
+            pixelOffset: new Cesium.Cartesian2(15, 0),
+        },
+    });
+    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(
+        function (movement) {
+            MoveEnd();
+        },
+        Cesium.ScreenSpaceEventType.LEFT_DOWN);
+    handler.setInputAction(
+        function (movement) {
+            //Home.Orientation.heading = viewer.camera.heading;
+        },
+        Cesium.ScreenSpaceEventType.LEFT_UP);
+
+    for (var ID of Object.keys(Models)) {
+        ImportModel(ID, false);
+    }
+    viewer.scene.camera.flyTo({
+        destination: Home.Position,
+        orientation: Home.Orientation
+    });
+
+
+    var home = document.querySelector('[title="View Home"]');
+    if (home) home.style.display = 'none';
+    Loading.style.display = 'none';
+
+}
+
+function SaveCamera() {
+    Home.Position = viewer.camera.positionWC.clone();
+    Home.Orientation.heading = viewer.camera.heading;
+    Home.Orientation.pitch = viewer.camera.pitch;
+    Home.Orientation.roll = viewer.camera.roll;
+    console.log({ Position: Home.Position, Orientation: Home.Orientation });
+};
+
+function LoadCamera() {
+    viewer.scene.camera.flyTo({
+        destination: Home.Position.clone(),
+        orientation: Home.Orientation
+    });
+};
+
+function UTM47N2LonLat(X, Y) {
+    let Prj1 = "+proj=utm +zone=47N +datum=WGS84 +units=m +no_defs +type=crs";
+    let Prj2 = "EPSG:4326";
+    return proj4(Prj1, Prj2).forward([X, Y], true);
+}
+
+function updateMaterial(visualizeRelativeHeight = false) {
+    if (visualizeRelativeHeight) {
+        const height = viewwer.scene.globe.terrainExaggerationRelativeHeight;
+        const exaggeration = viewwer.scene.globe.terrainExaggeration;
+        const alpha = Math.min(1.0, exaggeration * 0.25);
+        const layer = {
+            extendUpwards: true,
+            extendDownwards: true,
+            entries: [{
+                height: height + 100.0,
+                color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
+            },
+            {
+                height: height + 50.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+            },
+            {
+                height: height,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+            },
+            {
+                height: height - 50.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+            },
+            {
+                height: height - 100.0,
+                color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
+            },
+            ],
+        };
+        viewer.scene.globe.material = Cesium.createElevationBandMaterial({
+            scene: viewer.scene,
+            layers: [layer],
+        });
+    } else {
+        viewer.scene.globe.material = undefined;
+    }
+}
+
+// Make the active imagery layer a subscriber of the viewModel.
+function subscribeLayerParameter(viewModel, name) {
+    const imageryLayers = viewer.scene.imageryLayers;
+    Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
+        if (imageryLayers.length > 0) {
+            const layer = imageryLayers.get(0);
+            layer[name] = newValue;
+        }
     });
 }
 
-function FormatAreaRai(record, col) {
-    if (col.startsWith('prov') || col.startsWith('amp') || col.startsWith('tam')) {
-        switch (col) {
-            case "prov_namt":
-                return "จ." + record[col];
-                break;
-            case "amp_namt":
-                return "อ." + record[col];
-                break;
-            case "tam_namt":
-                return "ต." + record[col];
-                break;
-            default:
-                return record[col];
-                break;
+// Make the viewModel react to base layer changes.
+function updateViewModel(viewModel) {
+    const imageryLayers = viewer.scene.imageryLayers;
+    if (imageryLayers.length > 0) {
+        const layer = imageryLayers.get(0);
+        viewModel.brightness = layer.brightness;
+        viewModel.contrast = layer.contrast;
+        viewModel.hue = layer.hue;
+        viewModel.saturation = layer.saturation;
+        viewModel.gamma = layer.gamma;
+    }
+}
 
+function HeadNorth() {
+    console.log("HeadNorth");
+    viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(longitude, latitude, 300), new Cesium.HeadingPitchRange(
+        0, -2, 800
+    ));
+
+}
+
+function ToggleModel() {
+    let modelID = 'MUKA-LECT';
+    /*
+    let modelEntity = viewer.entities.getById(modelID);
+    if (!modelEntity) {
+        ImportModel(ModelURL, modelID);
+    } else {
+        modelEntity.visible = !modelEntity.visible;
+        SceneRefresh();
+    }
+    */
+    if (viewer.scene.primitives.length > 1) {
+        viewer.scene.primitives.show = !viewer.scene.primitives.show;
+        SceneRefresh();
+    } else {
+        for (var ID of Object.keys(Models)) {
+            ImportModel(ID, false);
         }
     }
-    return record['arearai_' + col] ? record['arearai_' + col].toLocaleString("en-US", { maximumFractionDigits: 2 }) : '';
+
 }
 
-function FormatCoAbsorb(record, col) {
-    if (col.startsWith('prov') || col.startsWith('amp') || col.startsWith('tam')) {
-        return record[col];
+function GetHeight(longitude, latitude) {
+    Home.Height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromDegrees(longitude, latitude));
+    if (!Home.Height || Home.Height < 0) {
+        setTimeout(GetHomeHeight, 50);
     }
-    return record['coabsorb_' + col] ? record['coabsorb_' + col].toLocaleString("en-US", { maximumFractionDigits: 2 }) : '';
+    Home.Height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromDegrees(longitude, latitude));
+    console.log('height', Home.Height);
 }
+
+function SceneRefresh() {
+    viewer.camera.lookUp(0.00000000001);
+    //viewer.forceResize(); //TODO: Test this
+}
+
+function ToggleMoveAround() {
+    if (window.StopMoving) {
+        MoveEnd();
+        LookAtRelease();
+    } else {
+        MoveAround();
+    }
+}
+
+function FlyToModel(ID) {
+    var ModelConfig = Models[ID];
+    if (!ModelConfig) ModelConfig = Home;
+    viewer.scene.camera.flyTo({ //not equalto viewer.flyTo
+        duration: 2,
+        //maximumHeight: 1000,
+        //pitchAdjustHeight: 1000,
+        destination: ModelConfig.Position,
+        orientation: ModelConfig.Orientation
+    });
+}
+
+
+function TogglePan() {
+    MoveEnd();
+    LookAtRelease();
+}
+
+function MoveEnd() {
+    if (window.StopMoving) window.StopMoving();
+    window.StopMoving = null;
+}
+
+function MoveAround() {
+    //viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    window.StopMoving = viewer.clock.onTick.addEventListener(() => {
+        //Home.HPR.heading += Home.Rotate * Math.PI / Home.SMOOTHNESS;
+        //viewer.camera.lookAt(Home.Center, Home.HPR);
+        var ray = viewer.camera.getPickRay(new Cesium.Cartesian2(viewer.canvas.clientWidth / 2, viewer.canvas.clientHeight / 2));
+        var pos = viewer.scene.globe.pick(ray, viewer.scene);
+        viewer.camera.lookAt(pos);
+        viewer.camera.rotateRight(0.005);
+    });
+}
+

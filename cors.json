@@ -1,0 +1,16 @@
+[
+  {
+    "origin": [
+      "http://localhost:9999",
+      "https://klongyong.as.r.appspot.com"
+    ],
+    "method": [
+      "GET",
+      "PUT"
+    ],
+    "responseHeader": [
+      "Content-Type"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
