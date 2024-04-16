@@ -29,7 +29,7 @@ const ee = require("@google/earthengine");
 const privateKey = require("./System/.private-key.json");
 const request = require('request');
 const path = require("path");
-const GEE = require("./GEE.js");
+const GEE = require("./Script/GEE.js");
 
 //const ee = require("@google/earthengine");
 //const privateKey = require("./System/watkaonoi-964fc4de4261.json");
@@ -139,7 +139,10 @@ app.get("/index.js", (req, res) => {
     //res.status(200).send('Hello, world!').end();
     res.sendFile(path.join(__dirname, "/index.js"));
 });
-
+app.get("/blank.png", (req, res) => {
+    //res.status(200).send('Hello, world!').end();
+    res.sendFile(path.join(__dirname, "/blank.png"));
+});
 app.get("/", (req, res) => {
     //res.status(200).send('Hello, world!').end();
     res.sendFile(path.join(__dirname, "/index.html"));

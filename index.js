@@ -1,3 +1,4 @@
+
 let z = 5;
 let ext = 0.01;
 //let longitude = 104.6208500000000;
@@ -34,17 +35,42 @@ let Home = {
         "z": 187328.03914283938
     },
     Orientation: {
-        "heading": 0.030061505197433114,
+        "heading": 6.283185307179586,
         "pitch": -0.9274696859465843,
-        "roll": 6.283131817330824
+        "roll": 6.2831318173308235
     },
     Rotate: -1, //-1 = counter-clockwise; +1 would be clockwise
     SMOOTHNESS: 1200, //it would make one full circle in roughly 600 frames
 };
 
+function HeadNorth() {
+    //viewer.camera.setView({
+    viewer.scene.camera.flyTo({
+        duration: 2,
+        destination: viewer.camera.positionWC.clone(),
+        orientation: {
+            heading: 0,
+            pitch: viewer.camera.pitch,
+            roll: viewer.camera.roll,
+        }
+    });
+
+}
+
+function FlyToModel(ID) {
+    var ModelConfig = Models[ID];
+    if (!ModelConfig) ModelConfig = Home;
+    viewer.scene.camera.flyTo({ //not equalto viewer.flyTo
+        duration: 2,
+        //maximumHeight: 1000,
+        //pitchAdjustHeight: 1000,
+        destination: ModelConfig.Position,
+        orientation: ModelConfig.Orientation
+    });
+}
 function NavigationResetAsHeadNorth() {
     console.log("Navigation Reset AsHeadNorth");
-    let reset = document.querySelector('div[title="Reset View"]');
+    let reset = viewer.cesiumNavigation.container.querySelector('div[title="Reset View"]');
     if (!reset) return; // no reset button of navigation plugin
     var clone = reset.cloneNode(true);
     clone.onclick = HeadNorth;
@@ -116,7 +142,7 @@ async function ImportModel(ModelID, flyTo) {
 
 function Main(body) {
     var CesiumViewer = document.querySelector("Viewer");
-    var viewer = new Cesium.Viewer("Viewer", {
+    globalThis.viewer = new Cesium.Viewer("Viewer", {
         terrain: Cesium.Terrain.fromWorldTerrain(),
         //mapProjection: new Cesium.WebMercatorProjection(),
         /* old version
@@ -140,12 +166,13 @@ function Main(body) {
         },
     });
     viewer.scene.globe.depthTestAgainstTerrain = true;
-    //Switch to Sentinel-2 Image at first use
+    /* Switch to Sentinel-2 Image at first use
     viewer.baseLayerPicker.viewModel.imageryProviderViewModels.forEach((x) => {
         if (x.name == "Sentinel-2") {
             viewer.baseLayerPicker.viewModel.selectedImagery = x;
         }
     });
+    /**/
     /* //hide globe
     viewer.scene.globe.show = false;
     viewer.scene.skyAtmosphere.show = false;
@@ -207,6 +234,19 @@ function Main(body) {
         updateViewModel(viewModel);
     });
     updateViewModel(viewModel);
+
+    const providerProvince = new Cesium.WebMapServiceImageryProvider({
+        url: 'https://iforms-api.dnp.go.th/geoserver/iforms/wms?service=WMS&version=1.1.0',
+        layers: 'iforms:Province_wgs84',
+        enablePickFeatures: false,
+        proxy: new Cesium.DefaultProxy('/proxy/'),
+        parameters: {
+            transparent: true,
+            format: 'image/png',
+        }
+    });
+    const layerProvince = new Cesium.ImageryLayer(providerProvince);
+    viewer.imageryLayers.add(layerProvince);
     //------------------------------
     viewer.toolbar = document.querySelector(".cesium-viewer-toolbar");
     //------------------------------
@@ -298,16 +338,16 @@ function Main(body) {
     for (var ID of Object.keys(Models)) {
         ImportModel(ID, false);
     }
+
     viewer.scene.camera.flyTo({
         destination: Home.Position,
         orientation: Home.Orientation
     });
 
-
     var home = document.querySelector('[title="View Home"]');
     if (home) home.style.display = 'none';
     Loading.style.display = 'none';
-
+    AQI_Entities();
 }
 
 function SaveCamera() {
@@ -381,6 +421,7 @@ function subscribeLayerParameter(viewModel, name) {
     });
 }
 
+
 // Make the viewModel react to base layer changes.
 function updateViewModel(viewModel) {
     const imageryLayers = viewer.scene.imageryLayers;
@@ -394,13 +435,7 @@ function updateViewModel(viewModel) {
     }
 }
 
-function HeadNorth() {
-    console.log("HeadNorth");
-    viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(longitude, latitude, 300), new Cesium.HeadingPitchRange(
-        0, -2, 800
-    ));
 
-}
 
 function ToggleModel() {
     let modelID = 'MUKA-LECT';
@@ -434,7 +469,8 @@ function GetHeight(longitude, latitude) {
 }
 
 function SceneRefresh() {
-    viewer.camera.lookUp(0.00000000001);
+    viewer.scene.requestRender();
+    //viewer.camera.lookUp(0.00000000001);
     //viewer.forceResize(); //TODO: Test this
 }
 
@@ -447,17 +483,7 @@ function ToggleMoveAround() {
     }
 }
 
-function FlyToModel(ID) {
-    var ModelConfig = Models[ID];
-    if (!ModelConfig) ModelConfig = Home;
-    viewer.scene.camera.flyTo({ //not equalto viewer.flyTo
-        duration: 2,
-        //maximumHeight: 1000,
-        //pitchAdjustHeight: 1000,
-        destination: ModelConfig.Position,
-        orientation: ModelConfig.Orientation
-    });
-}
+
 
 
 function TogglePan() {

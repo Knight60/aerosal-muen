@@ -12,8 +12,8 @@
 # limitations under the License.
 
 env_variables:
-  GOOGLE_CLOUD_PROJECT: "muka-3d"
-  GCLOUD_STORAGE_BUCKET: "muka-3d.appspot.com"
+  GOOGLE_CLOUD_PROJECT: "aerosol-muen"
+  GCLOUD_STORAGE_BUCKET: "aerosol-muen.appspot.com"
 
 # [START gae_quickstart_yaml]
 runtime: nodejs20

@@ -1,3 +1,4 @@
+// server side script
 const ee = require("@google/earthengine");
 
 const composites = {
@@ -51,6 +52,32 @@ const composites = {
     },
 };
 
+function ToISOString(date) {
+    var tzo = -date.getTimezoneOffset(),
+        dif = tzo >= 0 ? "+" : "-",
+        pad = function (num) {
+            return (num < 10 ? "0" : "") + num;
+        };
+
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1) +
+        "-" +
+        pad(date.getDate()) +
+        "T" +
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes()) +
+        ":" +
+        pad(date.getSeconds()) +
+        dif +
+        pad(Math.floor(Math.abs(tzo) / 60)) +
+        ":" +
+        pad(Math.abs(tzo) % 60)
+    );
+}
+
 function GetMap_LS_Date(isodate) {
     var Thailand = ee
         .FeatureCollection("USDOS/LSIB_SIMPLE/2017")
@@ -98,31 +125,6 @@ function GetMap_LS_Date(isodate) {
     return result;
 }
 
-function ToISOString(date) {
-    var tzo = -date.getTimezoneOffset(),
-        dif = tzo >= 0 ? "+" : "-",
-        pad = function (num) {
-            return (num < 10 ? "0" : "") + num;
-        };
-
-    return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate()) +
-        "T" +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes()) +
-        ":" +
-        pad(date.getSeconds()) +
-        dif +
-        pad(Math.floor(Math.abs(tzo) / 60)) +
-        ":" +
-        pad(Math.abs(tzo) % 60)
-    );
-}
 
 function AOD() {
     return "Hello";
@@ -134,4 +136,5 @@ module.exports = {
     GetMap_LS_Date: GetMap_LS_Date,
     ToISOString: ToISOString,
     AOD: AOD,
-};
+}
+
