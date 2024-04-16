@@ -152,7 +152,7 @@ function Main(body) {
         */
         vrButton: true,
         geocoder: false,
-        timeline: false,
+        timeline: true,
         animation: false,
         baseLayerPicker: true,
         selectionIndicator: false,
@@ -165,6 +165,10 @@ function Main(body) {
             webgl: { preserveDrawingBuffer: true }
         },
     });
+    const dateStart = Cesium.JulianDate.fromIso8601('2024-01-01');
+    const dateEnd = Cesium.JulianDate.fromIso8601((new Date()).toISOString())
+    viewer.timeline.zoomTo(dateStart, dateEnd);
+
     viewer.scene.globe.depthTestAgainstTerrain = true;
     /* Switch to Sentinel-2 Image at first use
     viewer.baseLayerPicker.viewModel.imageryProviderViewModels.forEach((x) => {
@@ -234,19 +238,30 @@ function Main(body) {
         updateViewModel(viewModel);
     });
     updateViewModel(viewModel);
+    //------------------------------
 
-    const providerProvince = new Cesium.WebMapServiceImageryProvider({
-        url: 'https://iforms-api.dnp.go.th/geoserver/iforms/wms?service=WMS&version=1.1.0',
-        layers: 'iforms:Province_wgs84',
-        enablePickFeatures: false,
-        proxy: new Cesium.DefaultProxy('/proxy/'),
-        parameters: {
-            transparent: true,
-            format: 'image/png',
-        }
-    });
-    const layerProvince = new Cesium.ImageryLayer(providerProvince);
+    const layerProvince = new Cesium.ImageryLayer(
+        new Cesium.WebMapServiceImageryProvider({
+            url: 'https://iforms-api.dnp.go.th/geoserver/iforms/wms?service=WMS&version=1.1.0',
+            layers: 'iforms:Province_wgs84',
+            enablePickFeatures: false,
+            proxy: new Cesium.DefaultProxy('/proxy/'),
+            parameters: {
+                transparent: true,
+                format: 'image/png',
+            }
+        })
+    );
     viewer.imageryLayers.add(layerProvince);
+
+    const layerAOD = new Cesium.UrlTemplateImageryProvider({
+        id: 'AOD',
+        //url: mapinfo.urlFormat,
+        url: 'https://earthengine.googleapis.com/v1/projects/aerosol-muen/maps/fb9499fe4dd53a417408d0e4e45634e0-1c0c3649017e92fd26ffd07e4a3706be/tiles/%7Bz%7D/%7Bx%7D/%7By%7D',
+    });
+    viewer.imageryLayers.addImageryProvider(layerAOD, 1);
+
+
     //------------------------------
     viewer.toolbar = document.querySelector(".cesium-viewer-toolbar");
     //------------------------------

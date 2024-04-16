@@ -38,13 +38,13 @@ async function AQI_Entities() {
             properties: { 'a': 1, 'b': 2 },
             position: Cesium.Cartesian3.fromDegrees(station.long, station.lat),
             point: {
-                pixelSize: 20,
+                pixelSize: 15,
                 outlineWidth: 3,
                 color: color, //Cesium.Color.CORNFLOWERBLUE,
                 outlineColor: Cesium.Color.fromCssColorString("#000000"),
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            },
+            },/*
             label: {
                 text: station.stationID,
                 font: "14pt sans-serif",
@@ -59,7 +59,7 @@ async function AQI_Entities() {
                 pixelOffset: new Cesium.Cartesian2(15, 6),
                 //eyeOffset: new Cesium.Cartesian3(0, 0, -100),
                 disableDepthTestDistance: 1.2742018 * 10 ** 7,
-            },
+            },*/
         }
         )
     }

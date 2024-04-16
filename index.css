@@ -49,7 +49,7 @@ screen and (max-height: 420px) {
 
 #Credit {
     position: absolute;
-    bottom: 25px;
+    bottom: 45px;
     z-index: 998;
     -webkit-user-select: none;
     /* Safari */
