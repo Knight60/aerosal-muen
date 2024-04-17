@@ -1,6 +1,6 @@
 //client side script
 async function AQI_Entities() {
-    const response = await fetch('http://air4thai.com/forweb/getAQI_JSON.php');
+    const response = await fetch('/proxy/air4thai.com/forweb/getAQI_JSON.php');
     const data = await response.json();
     const stations = data.stations;
     console.log(stations);
@@ -44,24 +44,23 @@ async function AQI_Entities() {
                 outlineColor: Cesium.Color.fromCssColorString("#000000"),
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            },/*
-            label: {
-                text: station.stationID,
-                font: "14pt sans-serif",
-                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
-                verticalOrigin: Cesium.VerticalOrigin.BASELINE,
-                fillColor: Cesium.Color.GHOSTWHITE,
-                showBackground: false,
-                backgroundColor: Cesium.Color.DARKSLATEGREY.withAlpha(0.8),
-                backgroundPadding: new Cesium.Cartesian2(8, 4),
-                disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                pixelOffset: new Cesium.Cartesian2(15, 6),
-                //eyeOffset: new Cesium.Cartesian3(0, 0, -100),
-                disableDepthTestDistance: 1.2742018 * 10 ** 7,
-            },*/
-        }
-        )
+            },
+            /*
+                        label: {
+                            text: station.stationID,
+                            font: "14pt sans-serif",
+                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                            horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+                            verticalOrigin: Cesium.VerticalOrigin.BASELINE,
+                            fillColor: Cesium.Color.GHOSTWHITE,
+                            showBackground: false,
+                            backgroundColor: Cesium.Color.DARKSLATEGREY.withAlpha(0.8),
+                            backgroundPadding: new Cesium.Cartesian2(8, 4),
+                            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                            pixelOffset: new Cesium.Cartesian2(15, 6),
+                            //eyeOffset: new Cesium.Cartesian3(0, 0, -100),
+                            disableDepthTestDistance: 1.2742018 * 10 ** 7,
+                        },*/
+        })
     }
 }
-

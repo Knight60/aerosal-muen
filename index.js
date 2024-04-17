@@ -1,4 +1,3 @@
-
 let z = 5;
 let ext = 0.01;
 //let longitude = 104.6208500000000;
@@ -68,6 +67,7 @@ function FlyToModel(ID) {
         orientation: ModelConfig.Orientation
     });
 }
+
 function NavigationResetAsHeadNorth() {
     console.log("Navigation Reset AsHeadNorth");
     let reset = viewer.cesiumNavigation.container.querySelector('div[title="Reset View"]');
@@ -165,9 +165,9 @@ function Main(body) {
             webgl: { preserveDrawingBuffer: true }
         },
     });
-    const dateStart = Cesium.JulianDate.fromIso8601('2024-01-01');
-    const dateEnd = Cesium.JulianDate.fromIso8601((new Date()).toISOString())
-    viewer.timeline.zoomTo(dateStart, dateEnd);
+    const minDate = Cesium.JulianDate.fromIso8601('2024-01-01');
+    const maxDate = Cesium.JulianDate.fromIso8601((new Date()).toISOString())
+    viewer.timeline.zoomTo(minDate, maxDate);
 
     viewer.scene.globe.depthTestAgainstTerrain = true;
     /* Switch to Sentinel-2 Image at first use
@@ -240,28 +240,11 @@ function Main(body) {
     updateViewModel(viewModel);
     //------------------------------
 
-    const layerProvince = new Cesium.ImageryLayer(
-        new Cesium.WebMapServiceImageryProvider({
-            url: 'https://iforms-api.dnp.go.th/geoserver/iforms/wms?service=WMS&version=1.1.0',
-            layers: 'iforms:Province_wgs84',
-            enablePickFeatures: false,
-            proxy: new Cesium.DefaultProxy('/proxy/'),
-            parameters: {
-                transparent: true,
-                format: 'image/png',
-            }
-        })
-    );
-    viewer.imageryLayers.add(layerProvince);
 
-    const layerAOD = new Cesium.UrlTemplateImageryProvider({
-        id: 'AOD',
-        //url: mapinfo.urlFormat,
-        url: 'https://earthengine.googleapis.com/v1/projects/aerosol-muen/maps/fb9499fe4dd53a417408d0e4e45634e0-1c0c3649017e92fd26ffd07e4a3706be/tiles/%7Bz%7D/%7Bx%7D/%7By%7D',
-    });
-    viewer.imageryLayers.addImageryProvider(layerAOD, 1);
-
-
+    AddImageProvince();
+    let eDate = new Date(maxDate.toString().split('T')[0]);
+    let sDate = new Date(eDate.getTime() - (1000 * 60 * 60 * 24 * 7));
+    AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
     //------------------------------
     viewer.toolbar = document.querySelector(".cesium-viewer-toolbar");
     //------------------------------
@@ -340,12 +323,12 @@ function Main(body) {
     });
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(
-        function (movement) {
+        function(movement) {
             MoveEnd();
         },
         Cesium.ScreenSpaceEventType.LEFT_DOWN);
     handler.setInputAction(
-        function (movement) {
+        function(movement) {
             //Home.Orientation.heading = viewer.camera.heading;
         },
         Cesium.ScreenSpaceEventType.LEFT_UP);
@@ -395,25 +378,25 @@ function updateMaterial(visualizeRelativeHeight = false) {
             extendUpwards: true,
             extendDownwards: true,
             entries: [{
-                height: height + 100.0,
-                color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
-            },
-            {
-                height: height + 50.0,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-            },
-            {
-                height: height,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
-            },
-            {
-                height: height - 50.0,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-            },
-            {
-                height: height - 100.0,
-                color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
-            },
+                    height: height + 100.0,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
+                },
+                {
+                    height: height + 50.0,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+                },
+                {
+                    height: height,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+                },
+                {
+                    height: height - 50.0,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+                },
+                {
+                    height: height - 100.0,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
+                },
             ],
         };
         viewer.scene.globe.material = Cesium.createElevationBandMaterial({
@@ -428,7 +411,7 @@ function updateMaterial(visualizeRelativeHeight = false) {
 // Make the active imagery layer a subscriber of the viewModel.
 function subscribeLayerParameter(viewModel, name) {
     const imageryLayers = viewer.scene.imageryLayers;
-    Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(function(newValue) {
         if (imageryLayers.length > 0) {
             const layer = imageryLayers.get(0);
             layer[name] = newValue;
@@ -523,3 +506,28 @@ function MoveAround() {
     });
 }
 
+async function AddImageProvince() {
+    const layerProvince = new Cesium.ImageryLayer(
+        new Cesium.WebMapServiceImageryProvider({
+            url: 'https://iforms-api.dnp.go.th/geoserver/iforms/wms?service=WMS&version=1.1.0',
+            layers: 'iforms:Province_wgs84',
+            enablePickFeatures: false,
+            proxy: new Cesium.DefaultProxy('/proxy/'),
+            parameters: {
+                transparent: true,
+                format: 'image/png',
+            }
+        })
+    );
+    viewer.imageryLayers.add(layerProvince);
+}
+
+async function AddImageAOD(sDate, eDate) {
+    var response = await fetch('/mapid/aod/' + sDate + '/' + eDate)
+    console.log(await response.clone().text());
+    const layerAOD = new Cesium.UrlTemplateImageryProvider({
+        id: 'AOD',
+        url: await response.clone().text(),
+    });
+    viewer.imageryLayers.addImageryProvider(layerAOD, 1);
+}

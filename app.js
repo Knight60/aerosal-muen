@@ -143,6 +143,10 @@ app.get("/blank.png", (req, res) => {
     //res.status(200).send('Hello, world!').end();
     res.sendFile(path.join(__dirname, "/blank.png"));
 });
+app.get("/favicon.ico", (req, res) => {
+    //res.status(200).send('Hello, world!').end();
+    res.sendFile(path.join(__dirname, "/favicon.ico"));
+});
 app.get("/", (req, res) => {
     //res.status(200).send('Hello, world!').end();
     res.sendFile(path.join(__dirname, "/index.html"));
@@ -158,6 +162,15 @@ app.get("/mapid/landsat/:date", (req, res, next) => {
     }
 });
 
+app.get("/mapid/aod/:sDate/:eDate", (req, res, next) => {
+    try {
+        res.send(GEE.GetTilesAOD(req.params.sDate, req.params.eDate));
+    } catch (error) {
+        GEEAuthenticate();
+        res.send(GEE.GetTilesAOD(req.params.sDate, req.params.eDate));
+        next(error);
+    }
+});
 
 /* Skip for listen after GEE Authen
 let Listening = false;
@@ -210,3 +223,38 @@ function GEEAuthenticate() {
         }
     );
 }
+
+
+app.get("/proxy/*", (req, res) => {
+    if (req.url.startsWith('/proxy/tile.forest.go.th/')) {
+        var z = req.url.split('/').slice(-3)[0];
+        var y = req.url.split('/').slice(-1)[0];
+        var e = y.split('.').length > 1 ? y.split('.')[1] : 'jpg';
+        y = y.split('.')[0];
+        var tms = y.startsWith('-');
+        var url = req.url.slice('/proxy/'.length);
+        url = url.slice(0, url.lastIndexOf('/') + 1);
+        y = !tms ? y : Math.pow(2, parseInt(z)) - (parseInt(y) * -1) - 1;
+        url = 'https://' + url + y + '.' + e;
+        //console.log(y);
+        try {
+            //console.log(req.url);
+            //console.log(url);
+            req.pipe(request(url)).pipe(res);
+        } catch (error) {
+            res.send(error);
+        }
+    } else if (req.url.startsWith('/proxy/air4thai.com/')) {
+        try {
+            var url = 'http://' + req.url.slice('/proxy/'.length);
+            //console.log(req.url);
+            //console.log(url);
+            req.pipe(request(url)).pipe(res);
+        } catch (error) {
+            res.send(error);
+        }
+    } else {
+        res.send("{error:'url not allow'}");
+        res.end();
+    }
+});

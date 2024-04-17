@@ -55,7 +55,7 @@ const composites = {
 function ToISOString(date) {
     var tzo = -date.getTimezoneOffset(),
         dif = tzo >= 0 ? "+" : "-",
-        pad = function (num) {
+        pad = function(num) {
             return (num < 10 ? "0" : "") + num;
         };
 
@@ -100,7 +100,7 @@ function GetMap_LS_Date(isodate) {
         .filterDate(date, next)
         .filterBounds(Thailand)
         .select(visualize.bands)
-        .map(function (image) {
+        .map(function(image) {
             var opticalBands = image.select("SR_B.").multiply(0.0000275).add(-0.2);
             //var thermalBands = image.select('ST_B.*').multiply(0.00341802).add(149.0);
             return image.addBands(opticalBands, null, true);
@@ -126,8 +126,21 @@ function GetMap_LS_Date(isodate) {
 }
 
 
-function AOD() {
-    return "Hello";
+function GetTilesAOD(sDate, eDate) {
+    var aodImages = ee.ImageCollection('MODIS/061/MCD19A2_GRANULES')
+        .select('Optical_Depth_047')
+        .filterDate(sDate, eDate);
+
+    var aodViz = {
+        min: 200,
+        max: 1000,
+        palette: ['yellow', 'orange', 'red'],
+        opacity: 0.5,
+    };
+
+    var aodImage = aodImages.mean();
+    aodImage = aodImage.mask(aodImage.gte(aodViz.min));
+    return aodImage.getMap(aodViz).urlFormat;
 }
 
 //************************************************** */
@@ -135,6 +148,5 @@ module.exports = {
     composites: composites,
     GetMap_LS_Date: GetMap_LS_Date,
     ToISOString: ToISOString,
-    AOD: AOD,
+    GetTilesAOD: GetTilesAOD,
 }
-
