@@ -25,8 +25,14 @@ Cesium.Camera.DEFAULT_VIEW_FACTOR = 0;
 function LookAtRelease() {
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
+
+let Now = new Date();
 let Models = {};
 let Home = {
+    AutoDate: false,
+    MinDate: Cesium.JulianDate.fromIso8601('2000-02-24'),
+    MaxDate: Cesium.JulianDate.fromIso8601(Now.toISOString()),
+    ThisDate: Cesium.JulianDate.fromIso8601(Now.toISOString()),
     //Center: Models[Object.keys(Models)[0]].Center, // for model
     Position: {
         "x": -1364625.1261613488,
@@ -42,15 +48,32 @@ let Home = {
     SMOOTHNESS: 1200, //it would make one full circle in roughly 600 frames
 };
 
+function GetMapCenter() {
+    var windowPosition = new Cesium.Cartesian2(viewer.container.clientWidth / 2, viewer.container.clientHeight / 2);
+    var pickRay = viewer.scene.camera.getPickRay(windowPosition);
+    var pickPosition = viewer.scene.globe.pick(pickRay, viewer.scene);
+    var pickPositionCartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(pickPosition);
+    console.log(pickPositionCartographic);
+    var Center = {
+        height: pickPositionCartographic.height,
+        longitude: pickPositionCartographic.longitude * (180 / Math.PI),
+        latitude: pickPositionCartographic.latitude * (180 / Math.PI)
+    }
+    console.log(Center);
+    return Center;
+}
+
 function HeadNorth() {
+    let Center = GetMapCenter();
     //viewer.camera.setView({
     viewer.scene.camera.flyTo({
         duration: 2,
         destination: viewer.camera.positionWC.clone(),
+        //destination: Cesium.Cartesian3.fromDegrees(Center.longitude, Center.latitude, viewer.camera.positionWC.clone().height),
         orientation: {
-            heading: 0,
-            pitch: viewer.camera.pitch,
-            roll: viewer.camera.roll,
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-90), //viewer.camera.pitch,
+            roll: Cesium.Math.toRadians(0), //viewer.camera.roll,
         }
     });
 
@@ -165,10 +188,6 @@ function Main(body) {
             webgl: { preserveDrawingBuffer: true }
         },
     });
-    const minDate = Cesium.JulianDate.fromIso8601('2024-01-01');
-    const maxDate = Cesium.JulianDate.fromIso8601((new Date()).toISOString())
-    viewer.timeline.zoomTo(minDate, maxDate);
-
     viewer.scene.globe.depthTestAgainstTerrain = true;
     /* Switch to Sentinel-2 Image at first use
     viewer.baseLayerPicker.viewModel.imageryProviderViewModels.forEach((x) => {
@@ -207,6 +226,9 @@ function Main(body) {
     viewer.scene.globe.dynamicAtmosphereLighting = false;
     updateMaterial(false);
     //------------------------------------------
+    viewer.timeline.zoomTo(Home.MinDate, Home.MaxDate);
+    viewer.clock.onTick.addEventListener(DetectTimeChange);
+    //------------------------------------------
     const imageryLayers = viewer.scene.imageryLayers;
 
     // The viewModel tracks the state of our mini application.
@@ -242,7 +264,7 @@ function Main(body) {
 
 
     AddImageProvince();
-    let eDate = new Date(maxDate.toString().split('T')[0]);
+    let eDate = new Date(Home.ThisDate.toString().split('T')[0]);
     let sDate = new Date(eDate.getTime() - (1000 * 60 * 60 * 24 * 7));
     AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
     //------------------------------
@@ -323,12 +345,12 @@ function Main(body) {
     });
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(
-        function(movement) {
+        function (movement) {
             MoveEnd();
         },
         Cesium.ScreenSpaceEventType.LEFT_DOWN);
     handler.setInputAction(
-        function(movement) {
+        function (movement) {
             //Home.Orientation.heading = viewer.camera.heading;
         },
         Cesium.ScreenSpaceEventType.LEFT_UP);
@@ -378,25 +400,25 @@ function updateMaterial(visualizeRelativeHeight = false) {
             extendUpwards: true,
             extendDownwards: true,
             entries: [{
-                    height: height + 100.0,
-                    color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
-                },
-                {
-                    height: height + 50.0,
-                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-                },
-                {
-                    height: height,
-                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
-                },
-                {
-                    height: height - 50.0,
-                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-                },
-                {
-                    height: height - 100.0,
-                    color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
-                },
+                height: height + 100.0,
+                color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
+            },
+            {
+                height: height + 50.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+            },
+            {
+                height: height,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+            },
+            {
+                height: height - 50.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+            },
+            {
+                height: height - 100.0,
+                color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
+            },
             ],
         };
         viewer.scene.globe.material = Cesium.createElevationBandMaterial({
@@ -411,7 +433,7 @@ function updateMaterial(visualizeRelativeHeight = false) {
 // Make the active imagery layer a subscriber of the viewModel.
 function subscribeLayerParameter(viewModel, name) {
     const imageryLayers = viewer.scene.imageryLayers;
-    Cesium.knockout.getObservable(viewModel, name).subscribe(function(newValue) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
         if (imageryLayers.length > 0) {
             const layer = imageryLayers.get(0);
             layer[name] = newValue;
@@ -522,12 +544,55 @@ async function AddImageProvince() {
     viewer.imageryLayers.add(layerProvince);
 }
 
+function GetImageAOD() {
+    let layers = [];
+    for (var i = 0; i < viewer.imageryLayers.length; i++) {
+        let provider = viewer.imageryLayers.get(i).imageryProvider;
+        if (!provider) break;
+        let resouce = provider._resource;
+        if (resouce && resouce.url && resouce.url.startsWith('https://earthengine')) {
+            layers.push(viewer.imageryLayers.get(i));
+        }
+    }
+    return layers;
+}
+
 async function AddImageAOD(sDate, eDate) {
+    let layers = GetImageAOD();
+    layers.forEach((layer) => { viewer.imageryLayers.remove(layer) });
+
     var response = await fetch('/mapid/aod/' + sDate + '/' + eDate)
     console.log(await response.clone().text());
+    var url = await response.clone().text();
+    if (!url.startsWith('https')) {
+        console.log('Get GEE Map ERror', url)
+        return;
+    }
     const layerAOD = new Cesium.UrlTemplateImageryProvider({
         id: 'AOD',
-        url: await response.clone().text(),
+        url: url,
     });
     viewer.imageryLayers.addImageryProvider(layerAOD, 1);
+}
+
+
+
+function DetectTimeChange(clock) {
+    //detect only day change
+    if (viewer.clock.currentTime.dayNumber == Home.ThisDate.dayNumber) return;
+    if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MaxDate) > 0) viewer.clock.currentTime = Home.MaxDate;
+    if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MinDate) < 0) viewer.clock.currentTime = Home.MinDate;
+    Home.ThisDate = viewer.clock.currentTime;
+    console.log(Home.ThisDate.toString());
+
+    let eDate = new Date(Home.ThisDate.toString().split('T')[0]);
+    let sDate = new Date(eDate.getTime() - (1000 * 60 * 60 * 24 * 7));
+    AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
+    console.log("Added Image AOD", sDate, "to", eDate);
+}
+
+function AutoTimeChange() {
+    if (!Home.AutoDate) return;
+    viewer.clock.currentTime = Cesium.JulianDate.addDays(viewer.clock.currentTime, -7, new Cesium.JulianDate());
+    window.setTimeout(AutoTimeChange, 1000 * 10);
 }
