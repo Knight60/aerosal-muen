@@ -10,7 +10,7 @@ async function AQI_Entities() {
     }
     let Air4ThaiStations = {};
     for (var station of stations) {
-        var color = station.AQILast.AQI.color_id;
+        var color = station.AQILast.PM25.color_id;
         switch (color) {
             case "0":
                 color = Cesium.Color.fromCssColorString("#FFFFFF");
@@ -34,7 +34,8 @@ async function AQI_Entities() {
                 color = Cesium.Color.fromCssColorString("#555555");
         }
         Air4ThaiStations[station.stationID] = viewer.entities.add({
-            id: [station.stationID, station.nameTH].join(" : "),
+            id: ['AQI', station.stationID].join("-"),
+            name: [station.stationID, station.nameTH].join(" : "),
             properties: { 'a': 1, 'b': 2 },
             position: Cesium.Cartesian3.fromDegrees(station.long, station.lat),
             point: {
@@ -45,6 +46,7 @@ async function AQI_Entities() {
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
+            description: StationDescription(station)
             /*
                         label: {
                             text: station.stationID,
@@ -64,3 +66,20 @@ async function AQI_Entities() {
         })
     }
 }
+
+function StationDescription(station) {
+    const Last = station.AQILast;
+    const description =
+        `<table class="cesium-infoBox-defaultTable"><tbody>` +
+        `<tr><th>Date</th><td>${Last.date} ${Last.time}</td></tr>` +
+        `<tr><th>AQI</th><td>${Last.AQI.aqi}</td></tr>` +
+        `<tr><th>PM25</th><td>${Last.PM25.value}</td></tr>` +
+        `<tr><th>PM100</th><td>${Last.PM10.value}</td></tr>` +
+        `<tr><th>NO2</th><td>${Last.NO2.value}</td></tr>` +
+        `<tr><th>S02</th><td>${Last.SO2.value}</td></tr>` +
+        `<tr><th>O3</th><td>${Last.O3.value}</td></tr>` +
+        `<tr><th>CO</th><td>${Last.CO.value}</td></tr>` +
+        `</tbody></table>`;
+    return description;
+}
+

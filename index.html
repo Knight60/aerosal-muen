@@ -35,6 +35,25 @@
 
     <script src="Build/Cesium/Cesium.js"></script>
     <script src="Script/viewerCesiumNavigationMixin.js"></script>
+
+    <!-- JQuery CDN -->
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+        integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+
+    <link rel="stylesheet" href="/Script/bootstrap-datetimepicker.min.css">
+    <script src="/Script/bootstrap-datetimepicker.min.js"></script>
+    <script src="/Script/bootstrap-weekpicker.js"></script>
+
+
     <!-- Google tag (gtag.js) --
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y7JS1TKF17"></script>
     <script>
@@ -46,6 +65,7 @@
     </script>
     -->
     <link rel="stylesheet" href="/Build/Cesium/Widgets/Animation/Animation.css">
+
 </head>
 
 <body onload="Main(this)">
@@ -70,7 +90,7 @@
                 </td>
                 <td>
                     <a href="https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD19A2_GRANULES"
-                        target="GIREN">
+                        target="GEE">
                         <img src="Image/Logo-GEE.png" style="padding: 5px; height: 40px;">
                 </td>
                 <td>
@@ -84,49 +104,24 @@
     <div id="Loading">
         <h1>Loading...</h1>
     </div>
-    <div id="Toolbar" style="display: none;">
+    <div id="Toolbar">
         <table>
             <tbody>
                 <tr>
-                    <td>Brightness</td>
-                    <td>
-                        <input type="range" min="0" max="3" step="0.02"
-                            data-bind="value: brightness, valueUpdate: 'input'">
-                        <input type="text" size="5" data-bind="value: brightness">
+                    <td><input type="checkbox" id="VisibleAQI" value="VisibleAQI" checked onchange="ToggleAQI(this)">
+                        <label for="VisibleAQI">AQI</label><br>
                     </td>
-                </tr>
-                <tr>
-                    <td>Contrast</td>
-                    <td>
-                        <input type="range" min="0" max="3" step="0.02"
-                            data-bind="value: contrast, valueUpdate: 'input'">
-                        <input type="text" size="5" data-bind="value: contrast">
-                    </td>
-                </tr>
-                <tr>
-                    <td>Hue</td>
-                    <td>
-                        <input type="range" min="0" max="3" step="0.02" data-bind="value: hue, valueUpdate: 'input'">
-                        <input type="text" size="5" data-bind="value: hue">
-                    </td>
-                </tr>
-                <tr>
-                    <td>Saturation</td>
-                    <td>
-                        <input type="range" min="0" max="3" step="0.02"
-                            data-bind="value: saturation, valueUpdate: 'input'">
-                        <input type="text" size="5" data-bind="value: saturation">
-                    </td>
-                </tr>
-                <tr>
-                    <td>Gamma</td>
-                    <td>
-                        <input type="range" min="0" max="3" step="0.02" data-bind="value: gamma, valueUpdate: 'input'">
-                        <input type="text" size="5" data-bind="value: gamma">
+                    <td><input type="checkbox" id="VisibleAOD" value="VisibleAOD" checked onchange="ToggleAOD(this)">
+                        <label for="VisibleAOD">AOD</label><br>
                     </td>
                 </tr>
             </tbody>
         </table>
+    </div>
+    <div id="Calendar">
+        <div style="position: relative; display: flex">
+            <div id="WeekPicker"></div>
+        </div>
     </div>
 </body>
 <link rel="stylesheet" href="index.css">

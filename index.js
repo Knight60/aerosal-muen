@@ -26,13 +26,12 @@ function LookAtRelease() {
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
 
-let Now = new Date();
 let Models = {};
 let Home = {
     AutoDate: false,
-    MinDate: Cesium.JulianDate.fromIso8601('2000-02-24'),
-    MaxDate: Cesium.JulianDate.fromIso8601(Now.toISOString()),
-    ThisDate: Cesium.JulianDate.fromIso8601(Now.toISOString()),
+    MinDate: Cesium.JulianDate.fromIso8601('2000-03-01'), //2000-02-24
+    MaxDate: Cesium.JulianDate.fromIso8601(moment().toISOString()),
+    ThisDate: Cesium.JulianDate.fromIso8601(moment().toISOString()),
     //Center: Models[Object.keys(Models)[0]].Center, // for model
     Position: {
         "x": -1364625.1261613488,
@@ -226,8 +225,9 @@ function Main(body) {
     viewer.scene.globe.dynamicAtmosphereLighting = false;
     updateMaterial(false);
     //------------------------------------------
-    viewer.timeline.zoomTo(Home.MinDate, Home.MaxDate);
+    viewer.timeline.zoomTo(Cesium.JulianDate.addDays(Home.MaxDate, -365, new Cesium.JulianDate()), Home.MaxDate);
     viewer.clock.onTick.addEventListener(DetectTimeChange);
+    globalThis.WeekPicker = $("#WeekPicker").weekpicker();
     //------------------------------------------
     const imageryLayers = viewer.scene.imageryLayers;
 
@@ -261,8 +261,6 @@ function Main(body) {
     });
     updateViewModel(viewModel);
     //------------------------------
-
-
     AddImageProvince();
     let eDate = new Date(Home.ThisDate.toString().split('T')[0]);
     let sDate = new Date(eDate.getTime() - (1000 * 60 * 60 * 24 * 7));
@@ -575,24 +573,46 @@ async function AddImageAOD(sDate, eDate) {
     viewer.imageryLayers.addImageryProvider(layerAOD, 1);
 }
 
-
-
 function DetectTimeChange(clock) {
     //detect only day change
     if (viewer.clock.currentTime.dayNumber == Home.ThisDate.dayNumber) return;
     if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MaxDate) > 0) viewer.clock.currentTime = Home.MaxDate;
     if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MinDate) < 0) viewer.clock.currentTime = Home.MinDate;
+    let Moment = moment(viewer.clock.currentTime.toString());
+    viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(Moment.day(0).toISOString(true));
     Home.ThisDate = viewer.clock.currentTime;
+
     console.log(Home.ThisDate.toString());
 
-    let eDate = new Date(Home.ThisDate.toString().split('T')[0]);
-    let sDate = new Date(eDate.getTime() - (1000 * 60 * 60 * 24 * 7));
+    let sDate = new Date(Home.ThisDate.toString().split('T')[0]);
+    let eDate = new Date(sDate.getTime() + (1000 * 60 * 60 * 24 * 7));
     AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
     console.log("Added Image AOD", sDate, "to", eDate);
+
+    globalThis.WeekPicker.setCurrentDate(sDate, false);
+
+    let ShowAOI = WeekPicker.getYear() == moment().year() && WeekPicker.getWeek() == moment().week();
+    VisibleAQI.checked = ShowAOI;
+    ToggleAQI(VisibleAQI);
+
 }
 
 function AutoTimeChange() {
     if (!Home.AutoDate) return;
     viewer.clock.currentTime = Cesium.JulianDate.addDays(viewer.clock.currentTime, -7, new Cesium.JulianDate());
     window.setTimeout(AutoTimeChange, 1000 * 10);
+}
+
+function ToggleAQI(checkbox) {
+    //console.log(checkbox);
+    viewer.entities.values.forEach((entity) => {
+        if (!entity.id.startsWith('AQI')) return;
+        entity.show = checkbox.checked;
+    })
+}
+
+function ToggleAOD(checkbox) {
+    //console.log(checkbox);
+    let layers = GetImageAOD();
+    layers.forEach((layer) => { layer.show = checkbox.checked });
 }

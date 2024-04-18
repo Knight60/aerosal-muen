@@ -42,7 +42,7 @@ screen and (max-height: 420px) {
 }
 
 #Logo img {
-    height: calc(4vw);
+    height: calc(5vw);
     min-height: 50px;
     max-height: 200px;
 }
@@ -67,4 +67,34 @@ screen and (max-height: 420px) {
 
 #SelectFlyTo {
     padding: 5px;
+}
+
+#Toolbar {
+    display: flex;
+    position: absolute;
+    z-index: 9999;
+    right: 10px;
+    top: 50px;
+    font-size: 20px;
+}
+
+#Toolbar td {
+    padding: 5px;
+}
+
+.cesium-infoBox {
+    left: 5px;
+    top: 120px;
+}
+
+label {
+    color: white;
+    cursor: pointer;
+}
+
+#Calendar {
+    position: absolute;
+    z-index: 9999;
+    right: 170px;
+    bottom: 30px;
 }
