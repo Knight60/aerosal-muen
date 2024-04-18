@@ -560,15 +560,15 @@ async function AddImageAOD(sDate, eDate) {
     layers.forEach((layer) => { viewer.imageryLayers.remove(layer) });
 
     var response = await fetch('/mapid/aod/' + sDate + '/' + eDate)
-    console.log(await response.clone().text());
-    var url = await response.clone().text();
-    if (!url.startsWith('https')) {
-        console.log('Get GEE Map ERror', url)
+    console.log(await response.clone().json());
+    var Map = await response.clone().json();
+    if (!Map.urlFormat.startsWith('https')) {
+        console.log('Get GEE Map ERror', Map.urlFormat)
         return;
     }
     const layerAOD = new Cesium.UrlTemplateImageryProvider({
         id: 'AOD',
-        url: url,
+        url: Map.urlFormat,
     });
     viewer.imageryLayers.addImageryProvider(layerAOD, 1);
 }
