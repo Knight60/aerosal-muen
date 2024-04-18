@@ -188,7 +188,7 @@ function Main(body) {
         },
     });
     viewer.scene.globe.depthTestAgainstTerrain = true;
-    /* Switch to Sentinel-2 Image at first use
+    //* Switch to Sentinel-2 Image at first use
     viewer.baseLayerPicker.viewModel.imageryProviderViewModels.forEach((x) => {
         if (x.name == "Sentinel-2") {
             viewer.baseLayerPicker.viewModel.selectedImagery = x;
