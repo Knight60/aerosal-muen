@@ -345,12 +345,12 @@ function Main(body) {
     });
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(
-        function (movement) {
+        function(movement) {
             MoveEnd();
         },
         Cesium.ScreenSpaceEventType.LEFT_DOWN);
     handler.setInputAction(
-        function (movement) {
+        function(movement) {
             //Home.Orientation.heading = viewer.camera.heading;
         },
         Cesium.ScreenSpaceEventType.LEFT_UP);
@@ -400,25 +400,25 @@ function updateMaterial(visualizeRelativeHeight = false) {
             extendUpwards: true,
             extendDownwards: true,
             entries: [{
-                height: height + 100.0,
-                color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
-            },
-            {
-                height: height + 50.0,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-            },
-            {
-                height: height,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
-            },
-            {
-                height: height - 50.0,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-            },
-            {
-                height: height - 100.0,
-                color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
-            },
+                    height: height + 100.0,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
+                },
+                {
+                    height: height + 50.0,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+                },
+                {
+                    height: height,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+                },
+                {
+                    height: height - 50.0,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+                },
+                {
+                    height: height - 100.0,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
+                },
             ],
         };
         viewer.scene.globe.material = Cesium.createElevationBandMaterial({
@@ -433,7 +433,7 @@ function updateMaterial(visualizeRelativeHeight = false) {
 // Make the active imagery layer a subscriber of the viewModel.
 function subscribeLayerParameter(viewModel, name) {
     const imageryLayers = viewer.scene.imageryLayers;
-    Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(function(newValue) {
         if (imageryLayers.length > 0) {
             const layer = imageryLayers.get(0);
             layer[name] = newValue;
@@ -576,6 +576,7 @@ async function AddImageAOD(sDate, eDate) {
 }
 
 function DetectTimeChange(clock) {
+    if (moment(viewer.clock.currentTime.toString()).day != 0) return; //skip if not sunday
     //detect only day change
     if (viewer.clock.currentTime.dayNumber == Home.ThisDate.dayNumber) return;
     if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MaxDate) > 0) viewer.clock.currentTime = Home.MaxDate;
@@ -593,8 +594,8 @@ function DetectTimeChange(clock) {
 
     globalThis.WeekPicker.setCurrentDate(sDate, false);
 
-    let ShowAOI = WeekPicker.getYear() == moment().year() && WeekPicker.getWeek() == moment().week();
-    VisibleAQI.checked = ShowAOI;
+    let LastAOI = WeekPicker.getYear() == moment().year() && WeekPicker.getWeek() == moment().week();
+    VisibleAQI.checked = LastAOI;
     ToggleAQI(VisibleAQI);
 
 }
