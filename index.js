@@ -1,3 +1,12 @@
+if (localStorage.getItem('visited') == 'true') {
+    console.log('has visited');
+    ToggleInfographic(false);
+} else {
+    console.log('first visit');
+    localStorage.setItem('visited', true);
+    ToggleInfographic(true);
+}
+
 let z = 5;
 let ext = 0.01;
 //let longitude = 104.6208500000000;
@@ -282,6 +291,15 @@ function Main(body) {
     toolModel.onclick = ToggleModel;
     viewer.toolbar.insertBefore(toolModel, viewer.toolbar.children[0]);
     */
+    //------------------------------
+    let toolInfograph = document.createElement("button");
+    toolInfograph.id = "ToggleInfographic";
+    toolInfograph.classList.add("cesium-button");
+    toolInfograph.classList.add("cesium-toolbar-button");
+    toolInfograph.classList.add("material-icons");
+    toolInfograph.innerHTML = "info";
+    toolInfograph.onclick = ToggleInfographic;
+    viewer.toolbar.insertBefore(toolInfograph, viewer.toolbar.children[0]);
     //------------------------------
     let toolMoveAround = document.createElement("button");
     toolMoveAround.id = "ToggleMoveAround";
@@ -626,4 +644,14 @@ function ToggleAOD(checkbox) {
     //console.log(checkbox);
     let layers = GetImageAOD();
     layers.forEach((layer) => { layer.show = checkbox.checked });
+}
+
+function ToggleInfographic(force = null) {
+    if (force == null) {
+        Infographic.style.display = Infographic.style.display == 'none' ? 'inline' : 'none'
+    } else if (force) {
+        Infographic.style.display = 'inline';
+    } else {
+        Infographic.style.display = 'none';
+    }
 }

@@ -1,6 +1,5 @@
 @media screen and (max-width: 700px),
 screen and (max-height: 420px) {
-
     .compass,
     .navigation-controls {
         display: block !important;
@@ -25,7 +24,6 @@ screen and (max-height: 420px) {
     margin: auto;
     width: 50%;
     padding: 10px;
-
 }
 
 #Logo {
@@ -99,6 +97,39 @@ label {
     bottom: 10px;
 }
 
+#Infographic {
+    position: absolute;
+    z-index: 999;
+    width: 90%;
+    height: 76%;
+    left: 5%;
+    top: 13%;
+    border-radius: 20px;
+    background: #ffffffee;
+    outline: solid 15px #ffffffaa;
+}
+
+#InfographicClose {
+    font-size: 50px;
+    color: #555555;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+#InfographicTitle {
+    text-align: center;
+    font-weight: bold;
+    font-size: 30px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#Infographic .card {
+    border: none;
+    background-color: transparent;
+}
+
 @media screen and (max-width: 700px) {
     #Calendar {
         right: 65px
@@ -111,5 +142,11 @@ label {
         transform: translate(-50%, -50%);
         right: auto;
         bottom: 45px;
+    }
+    #InfographicClose {
+        font-size: 32px;
+    }
+    #InfographicTitle {
+        font-size: 20px;
     }
 }
