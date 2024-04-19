@@ -99,17 +99,17 @@ label {
     bottom: 10px;
 }
 
+@media screen and (max-width: 700px) {
+    #Calendar {
+        right: 65px
+    }
+}
+
 @media screen and (max-width: 500px) {
     #Calendar {
         left: 50%;
         transform: translate(-50%, -50%);
-        right: auto !important;
+        right: auto;
         bottom: 45px;
-    }
-}
-
-@media screen and (max-width: 3440px) {
-    #Calendar {
-        right: 65px
     }
 }
