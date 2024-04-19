@@ -264,9 +264,11 @@ function Main(body) {
     updateViewModel(viewModel);
     //------------------------------
     AddImageProvince();
+    /* script when always change date at first time
     let eDate = new Date(Home.ThisDate.toString().split('T')[0]);
     let sDate = new Date(eDate.getTime() - (1000 * 60 * 60 * 24 * 7));
     AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
+    */
     //------------------------------
     viewer.toolbar = document.querySelector(".cesium-viewer-toolbar");
     //------------------------------
@@ -576,18 +578,24 @@ async function AddImageAOD(sDate, eDate) {
 }
 
 function DetectTimeChange(clock) {
-    if (moment(viewer.clock.currentTime.toString()).day != 0) return; //skip if not sunday
     //detect only day change
     if (viewer.clock.currentTime.dayNumber == Home.ThisDate.dayNumber) return;
     if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MaxDate) > 0) viewer.clock.currentTime = Home.MaxDate;
     if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MinDate) < 0) viewer.clock.currentTime = Home.MinDate;
-    let Moment = moment(viewer.clock.currentTime.toString());
+
+    let Moment = moment(Cesium.JulianDate.toIso8601(viewer.clock.currentTime));
+    //console.log(Moment);
+    //console.log(Moment.toISOString(true));
+    //console.log(Moment.day());
+    if (Moment.day() != 0) return; //skip if not sunday
+    console.log(Moment.toISOString(true));
+
     viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(Moment.day(0).toISOString(true));
     Home.ThisDate = viewer.clock.currentTime;
 
-    console.log(Home.ThisDate.toString());
+    console.log(moment(Cesium.JulianDate.toIso8601(Home.ThisDate)).toISOString(true));
 
-    let sDate = new Date(Home.ThisDate.toString().split('T')[0]);
+    let sDate = new Date(Home.ThisDate.toString());
     let eDate = new Date(sDate.getTime() + (1000 * 60 * 60 * 24 * 7));
     AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
     console.log("Added Image AOD", sDate, "to", eDate);
