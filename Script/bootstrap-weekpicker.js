@@ -83,11 +83,12 @@
 
         return this.each(function () {
             // Append input field to weekpicker
-            $(this).append(`<input type='text' class='form-control text-center' style='padding:0px;font-weight:bold; cursor:pointer'>
+            $(this).append(`<input type='text'  class='form-control text-center' style='padding:0px;font-weight:bold; cursor:pointer'>
             <div id="ThisDate" style="background: white; text-align: center; font-size: 12px;">${(new Date()).toISOString().split('T')[0]}`);
 
             var weekpickerDiv = $(this);
             var inputField = weekpickerDiv.find("input");
+
             // Append DateTimePicker to weekpicker's input field
             //https://getdatepicker.com/4/Options/
             inputField.datetimepicker({

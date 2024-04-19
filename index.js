@@ -34,14 +34,14 @@ let Home = {
     ThisDate: Cesium.JulianDate.fromIso8601(moment().toISOString()),
     //Center: Models[Object.keys(Models)[0]].Center, // for model
     Position: {
-        "x": -1364625.1261613488,
-        "y": 7727263.116251796,
-        "z": 187328.03914283938
+        "x": -1393807.6690063297,
+        "y": 7892416.69940262,
+        "z": 469509.43508834415
     },
     Orientation: {
-        "heading": 6.283185307179586,
-        "pitch": -0.9274696859465843,
-        "roll": 6.2831318173308235
+        "heading": 6.283185307179585,
+        "pitch": -1.05868944116109,
+        "roll": 6.283185307179586
     },
     Rotate: -1, //-1 = counter-clockwise; +1 would be clockwise
     SMOOTHNESS: 1200, //it would make one full circle in roughly 600 frames
@@ -174,7 +174,7 @@ function Main(body) {
         */
         vrButton: true,
         geocoder: false,
-        timeline: true,
+        timeline: false,
         animation: false,
         baseLayerPicker: true,
         selectionIndicator: false,
@@ -225,7 +225,9 @@ function Main(body) {
     viewer.scene.globe.dynamicAtmosphereLighting = false;
     updateMaterial(false);
     //------------------------------------------
+    /*
     viewer.timeline.zoomTo(Cesium.JulianDate.addDays(Home.MaxDate, -365, new Cesium.JulianDate()), Home.MaxDate);
+    */
     viewer.clock.onTick.addEventListener(DetectTimeChange);
     globalThis.WeekPicker = $("#WeekPicker").weekpicker();
     //------------------------------------------
