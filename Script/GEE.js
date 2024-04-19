@@ -126,27 +126,48 @@ function GetMap_LS_Date(isodate) {
 }
 
 
-function GetTilesAOD(sDate, eDate) {
-    var aodImages = ee.ImageCollection('MODIS/061/MCD19A2_GRANULES')
-        .select('Optical_Depth_047')
-        .filterDate(sDate, eDate);
-
-    var aodViz = {
-        min: 200,
-        max: 1000,
-        palette: ['yellow', 'orange', 'red'],
-        opacity: 0.5,
-    };
-
-    var aodImage = aodImages.mean();
-    aodImage = aodImage.mask(aodImage.gte(aodViz.min));
-    return { urlFormat: aodImage.getMap(aodViz).urlFormat };
+async function GetMapTilesAOD(sDate, eDate) {
+    return await GetMapTilesAODPromise(sDate, eDate);
 }
+
+function GetMapTilesAODPromise(sDate, eDate) {
+    return new Promise((resolve, reject) => {
+        GetMapTilesAODInfo(sDate, eDate,
+            (successResponse) => {
+                console.log('success', successResponse.urlFormat);
+                resolve({ urlFormat: successResponse.urlFormat })
+            },
+            (errorResponse) => {
+                console.log('error', errorResponse);
+                reject({ error: errorResponse })
+            });
+    })
+
+}
+function GetMapTilesAODInfo(sDate, eDate, successCallback, errorCallback) {
+    try {
+        var aodImages = ee.ImageCollection('MODIS/061/MCD19A2_GRANULES')
+            .select('Optical_Depth_047')
+            .filterDate(sDate, eDate);
+        var aodViz = {
+            min: 200,
+            max: 1000,
+            palette: ['yellow', 'orange', 'red'],
+            opacity: 0.5,
+        };
+        var aodImage = aodImages.mean();
+        aodImage.mask(aodImage.gte(aodViz.min));
+        aodImage.getMap(aodViz, successCallback);
+    } catch (error) {
+        errorCallback(error);
+    }
+}
+
 
 //************************************************** */
 module.exports = {
     composites: composites,
     GetMap_LS_Date: GetMap_LS_Date,
     ToISOString: ToISOString,
-    GetTilesAOD: GetTilesAOD,
+    GetMapTilesAOD: GetMapTilesAOD,
 }

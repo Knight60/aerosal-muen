@@ -1,1 +1,2 @@
-python app.py
+REM python app.py
+npm start

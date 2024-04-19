@@ -155,20 +155,30 @@ app.get("/", (req, res) => {
 app.get("/mapid/landsat/:date", (req, res, next) => {
     try {
         res.send(GEE.GetMap_LS_Date(req.params.date));
-    } catch (error) {
-        GEEAuthenticate();
-        res.send(GEE.GetMap_LS_Date(req.params.date));
-        next(error);
+    } catch (e) {
+        try {
+            GEEAuthenticate();
+            res.send(GEE.GetMap_LS_Date(req.params.date));
+        } catch (error) {
+            next(error);
+        }
     }
 });
 
 app.get("/mapid/aod/:sDate/:eDate", (req, res, next) => {
     try {
-        res.send(GEE.GetTilesAOD(req.params.sDate, req.params.eDate));
-    } catch (error) {
+        GEE.GetMapTilesAOD(req.params.sDate, req.params.eDate).then((result) => {
+            res.send(result)
+        });
+    } catch (e) {
         GEEAuthenticate();
-        res.send(GEE.GetTilesAOD(req.params.sDate, req.params.eDate));
-        next(error);
+        try {
+            GEE.GetMapTilesAOD(req.params.sDate, req.params.eDate).then((result) => {
+                res.send(result)
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 });
 
