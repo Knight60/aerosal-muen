@@ -36,10 +36,13 @@
 
         function setWeekYear(element, currentDate, withTimeLine = true) {
             //console.log('Set Week Year', currentDate);
-            ThisDate.innerHTML = 'SUN ' + currentDate.day(0).toISOString(true).split('T')[0];
+            let FirstDayOfWeek = currentDate.day(0);
+            let LastDayOfWeek = FirstDayOfWeek.clone().add(6, 'days');
+            if (LastDayOfWeek.isAfter(moment())) LastDayOfWeek = moment();
+            ThisDate.innerHTML = 'SUN-' + LastDayOfWeek.format('ddd').toUpperCase() + ' ' + LastDayOfWeek.toISOString(true).split('T')[0];
             //----------
             //console.log(currentDate.toISOString(true));
-            let SunDay = Cesium.JulianDate.fromIso8601(currentDate.day(0).toISOString(true)); //Cesium
+            let SunDay = Cesium.JulianDate.fromIso8601(FirstDayOfWeek.toISOString(true)); //Cesium
             if (withTimeLine) viewer.clock.currentTime = SunDay;
             //console.log(viewer.clock.currentTime.toString());
             //----------

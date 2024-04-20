@@ -1,9 +1,9 @@
-if (localStorage.getItem('visited') == 'true') {
-    console.log('has visited');
+if (localStorage.getItem('skipinfo') == 'true') {
+    console.log('skip showinfo');
     ToggleInfographic(false);
 } else {
-    console.log('first visit');
-    localStorage.setItem('visited', true);
+    console.log('showinfo');
+    localStorage.setItem('skipinfo', true);
     ToggleInfographic(true);
 }
 
@@ -365,12 +365,12 @@ function Main(body) {
     });
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(
-        function(movement) {
+        function (movement) {
             MoveEnd();
         },
         Cesium.ScreenSpaceEventType.LEFT_DOWN);
     handler.setInputAction(
-        function(movement) {
+        function (movement) {
             //Home.Orientation.heading = viewer.camera.heading;
         },
         Cesium.ScreenSpaceEventType.LEFT_UP);
@@ -420,25 +420,25 @@ function updateMaterial(visualizeRelativeHeight = false) {
             extendUpwards: true,
             extendDownwards: true,
             entries: [{
-                    height: height + 100.0,
-                    color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
-                },
-                {
-                    height: height + 50.0,
-                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-                },
-                {
-                    height: height,
-                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
-                },
-                {
-                    height: height - 50.0,
-                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-                },
-                {
-                    height: height - 100.0,
-                    color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
-                },
+                height: height + 100.0,
+                color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
+            },
+            {
+                height: height + 50.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+            },
+            {
+                height: height,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+            },
+            {
+                height: height - 50.0,
+                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+            },
+            {
+                height: height - 100.0,
+                color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
+            },
             ],
         };
         viewer.scene.globe.material = Cesium.createElevationBandMaterial({
@@ -453,7 +453,7 @@ function updateMaterial(visualizeRelativeHeight = false) {
 // Make the active imagery layer a subscriber of the viewModel.
 function subscribeLayerParameter(viewModel, name) {
     const imageryLayers = viewer.scene.imageryLayers;
-    Cesium.knockout.getObservable(viewModel, name).subscribe(function(newValue) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
         if (imageryLayers.length > 0) {
             const layer = imageryLayers.get(0);
             layer[name] = newValue;
@@ -577,11 +577,14 @@ function GetImageAOD() {
     return layers;
 }
 
-async function AddImageAOD(sDate, eDate) {
+async function AddImageAOD(sDate, eDate, signal) {
     let layers = GetImageAOD();
     layers.forEach((layer) => { viewer.imageryLayers.remove(layer) });
 
-    var response = await fetch('/mapid/aod/' + sDate + '/' + eDate)
+    var response = await fetch('/mapid/aod/' + sDate + '/' + eDate, {
+        method: 'get',
+        signal: signal,
+    });
     console.log(await response.clone().json());
     var Map = await response.clone().json();
     if (!Map.urlFormat.startsWith('https')) {
@@ -592,10 +595,12 @@ async function AddImageAOD(sDate, eDate) {
         id: 'AOD',
         url: Map.urlFormat,
     });
+    if (signal.aborted) return;
     viewer.imageryLayers.addImageryProvider(layerAOD, 1);
 }
 
 function DetectTimeChange(clock) {
+    //console.log(viewer.clock.currentTime);
     //detect only day change
     if (viewer.clock.currentTime.dayNumber == Home.ThisDate.dayNumber) return;
     if (Cesium.JulianDate.compare(viewer.clock.currentTime, Home.MaxDate) > 0) viewer.clock.currentTime = Home.MaxDate;
@@ -615,7 +620,12 @@ function DetectTimeChange(clock) {
 
     let sDate = new Date(Home.ThisDate.toString());
     let eDate = new Date(sDate.getTime() + (1000 * 60 * 60 * 24 * 7));
-    AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0]);
+    if (globalThis.AbortAOD && !globalThis.AbortAOD.signal.aborted) {
+        globalThis.AbortAOD.abort()
+    }
+    globalThis.AbortAOD = new AbortController();
+
+    AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0], globalThis.AbortAOD.signal);
     console.log("Added Image AOD", sDate, "to", eDate);
 
     globalThis.WeekPicker.setCurrentDate(sDate, false);
@@ -638,20 +648,29 @@ function ToggleAQI(checkbox) {
         if (!entity.id.startsWith('AQI')) return;
         entity.show = checkbox.checked;
     })
+    SceneRefresh();
+
 }
 
 function ToggleAOD(checkbox) {
     //console.log(checkbox);
     let layers = GetImageAOD();
     layers.forEach((layer) => { layer.show = checkbox.checked });
+    SceneRefresh();
+
 }
 
-function ToggleInfographic(force = null) {
+async function ToggleInfographic(force = null) {
     if (force == null) {
-        Infographic.style.display = Infographic.style.display == 'none' ? 'inline' : 'none'
-    } else if (force) {
+        force = Infographic.style.display == 'none' ? true : false;
+    };
+    if (force) {
         Infographic.style.display = 'inline';
+        InfographicShowAgain.checked = false;
+        localStorage.setItem('skipinfo', false);
     } else {
         Infographic.style.display = 'none';
     }
+    const content = await fetch('/infographic.html');
+    InfographicContent.innerHTML = await content.text();
 }

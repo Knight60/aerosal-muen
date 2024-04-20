@@ -118,38 +118,16 @@ app.get("/map/:z/:x/:y.png", async (req, res, next) => {
 //////////////////////////////////////////////////////
 /*          Dynamic Content                 */
 //////////////////////////////////////////////////////
-app.get("/favicon.ico", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/favicon.ico"));
-});
-app.get("/index.html", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/index.html"));
-});
-app.get("/index2d.html", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/index2d.html"));
-});
-app.get("/index.css", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/index.css"));
-});
-
-app.get("/index.js", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/index.js"));
-});
-app.get("/blank.png", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/blank.png"));
-});
-app.get("/favicon.ico", (req, res) => {
-    //res.status(200).send('Hello, world!').end();
-    res.sendFile(path.join(__dirname, "/favicon.ico"));
-});
 app.get("/", (req, res) => {
     //res.status(200).send('Hello, world!').end();
     res.sendFile(path.join(__dirname, "/index.html"));
+});
+
+app.get("/:file", (req, res) => {
+    let files = ["favicon.ico", "index.html", "index2d.html", "index.css", "index.js",
+        "blank.png", "favicon.ico", "infographic.html"];
+    if (files.includes(req.params.file))
+        res.sendFile(path.join(__dirname, "/" + req.params.file));
 });
 
 app.get("/mapid/landsat/:date", (req, res, next) => {

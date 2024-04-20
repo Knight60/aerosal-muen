@@ -134,11 +134,11 @@ function GetMapTilesAODPromise(sDate, eDate) {
     return new Promise((resolve, reject) => {
         GetMapTilesAODInfo(sDate, eDate,
             (successResponse) => {
-                console.log('success', successResponse.urlFormat);
+                //console.log('success', successResponse.urlFormat);
                 resolve({ urlFormat: successResponse.urlFormat })
             },
             (errorResponse) => {
-                console.log('error', errorResponse);
+                //console.log('error', errorResponse);
                 reject({ error: errorResponse })
             });
     })
@@ -150,13 +150,13 @@ function GetMapTilesAODInfo(sDate, eDate, successCallback, errorCallback) {
             .select('Optical_Depth_047')
             .filterDate(sDate, eDate);
         var aodViz = {
-            min: 200,
-            max: 1000,
-            palette: ['yellow', 'orange', 'red'],
-            opacity: 0.5,
+            min: 500,
+            max: 1200,
+            palette: ['white', 'yellow', 'red', '#6b0000'],
+            opacity: 0.4,
         };
         var aodImage = aodImages.mean();
-        aodImage.mask(aodImage.gte(aodViz.min));
+        aodImage.mask(aodImage.lte(aodViz.min));
         aodImage.getMap(aodViz, successCallback);
     } catch (error) {
         errorCallback(error);

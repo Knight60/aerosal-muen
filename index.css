@@ -1,5 +1,15 @@
+body {
+    font-family: "K2D", sans-serif !important;
+}
+
+li {
+    list-style-type: circle;
+    padding: 5px 0px;
+}
+
 @media screen and (max-width: 700px),
 screen and (max-height: 420px) {
+
     .compass,
     .navigation-controls {
         display: block !important;
@@ -95,17 +105,18 @@ label {
     z-index: 9999;
     right: 170px;
     bottom: 10px;
+    min-width: 270px;
 }
 
 #Infographic {
     position: absolute;
     z-index: 999;
     width: 90%;
-    height: 76%;
+    height: 80%;
     left: 5%;
-    top: 13%;
+    top: 10%;
     border-radius: 20px;
-    background: #ffffffee;
+    background: #ffffffd6;
     outline: solid 15px #ffffffaa;
 }
 
@@ -119,20 +130,76 @@ label {
 }
 
 #InfographicTitle {
+    padding: 15px 0px 0px 0px;
     text-align: center;
     font-weight: bold;
-    font-size: 30px;
-    font-family: 'Courier New', Courier, monospace;
+    font-size: 36px;
+    text-shadow: 2px 2px 5px #666;
+
+}
+
+#InfographicShow {
+    padding: 0px 15px 0px 15px;
+    text-align: right;
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+#InfographicContent {
+    height: calc(100vh - 365px);
+    overflow: auto;
+    display: flex;
+    flex-flow: wrap;
 }
 
 #Infographic .card {
+    padding: 10px;
     border: none;
     background-color: transparent;
+}
+
+#Infographic .card-title :first {
+    display: inline-flex;
+}
+
+#Infographic .card-title b {
+    margin-left: 60px;
+}
+
+#Infographic .card-title .icon {
+    font-size: 50px;
+    position: absolute;
+}
+
+#Infographic .card-text {
+    display: flex;
+}
+
+#Infographic p {
+    text-indent: 4.0em;
+}
+
+#Infographic .imgLeft {
+    float: left;
+    border-radius: .5em;
+    outline: solid 5px white;
+    margin: 5px 0px 5px 20px;
+}
+
+#Infographic .imgRight {
+    float: right;
+    border-radius: .5em;
+    outline: solid 5px white;
+    margin: 5px 0px 5px 20px;
 }
 
 @media screen and (max-width: 700px) {
     #Calendar {
         right: 65px
+    }
+
+    #InfographicTitle {
+        font-size: 25px;
     }
 }
 
@@ -143,10 +210,19 @@ label {
         right: auto;
         bottom: 45px;
     }
+
     #InfographicClose {
         font-size: 32px;
     }
+
     #InfographicTitle {
         font-size: 20px;
     }
+}
+
+
+#Satellite img {
+    max-height: 83px;
+    width: auto;
+    height: auto;
 }
