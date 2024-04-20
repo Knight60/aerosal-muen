@@ -110,7 +110,7 @@ label {
 
 #Infographic {
     position: absolute;
-    z-index: 999;
+    z-index: 9999;
     width: 90%;
     height: 80%;
     left: 5%;
@@ -146,7 +146,7 @@ label {
 }
 
 #InfographicContent {
-    height: calc(100vh - 365px);
+    height: calc(90vh - 230px);
     overflow: auto;
     display: flex;
     flex-flow: wrap;
