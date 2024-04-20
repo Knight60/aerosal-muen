@@ -172,7 +172,7 @@ label {
 }
 
 #Infographic .card-text {
-    display: flex;
+    display: block;
 }
 
 #Infographic p {
@@ -194,6 +194,7 @@ label {
 }
 
 @media screen and (max-width: 700px) {
+
     #Calendar {
         right: 65px
     }
