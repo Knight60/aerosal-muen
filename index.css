@@ -100,6 +100,20 @@ label {
     cursor: pointer;
 }
 
+#LegendAOD {
+    position: absolute;
+    z-index: 9999;
+    right: 455px;
+    bottom: 10px;
+    min-width: 270px;
+    height: 43px;
+}
+
+#LegendAOD img {
+    margin: 8px;
+    width: 300px;
+}
+
 #Calendar {
     position: absolute;
     z-index: 9999;
@@ -193,10 +207,21 @@ label {
     margin: 5px 0px 5px 20px;
 }
 
+@media screen and (max-width: 1024px) {
+    #LegendAOD {
+        right: 50px;
+        bottom: 60px;
+    }
+}
+
 @media screen and (max-width: 700px) {
+    #LegendAOD {
+        right: 40px;
+        bottom: 60px;
+    }
 
     #Calendar {
-        right: 65px
+        right: 60px;
     }
 
     #InfographicTitle {
@@ -205,6 +230,13 @@ label {
 }
 
 @media screen and (max-width: 500px) {
+    #LegendAOD {
+        left: 50%;
+        transform: translate(-50%, -50%);
+        right: auto;
+        bottom: 95px;
+    }
+
     #Calendar {
         left: 50%;
         transform: translate(-50%, -50%);

@@ -618,17 +618,25 @@ function DetectTimeChange(clock) {
 
     console.log(moment(Cesium.JulianDate.toIso8601(Home.ThisDate)).toISOString(true));
 
-    let sDate = new Date(Home.ThisDate.toString());
-    let eDate = new Date(sDate.getTime() + (1000 * 60 * 60 * 24 * 7));
+    let sDate = moment(Home.ThisDate.toString());
+    let eDate = sDate.clone().add(6, 'days');
+
+    globalThis.WeekPicker.setCurrentDate(sDate, false);
+
+    //* fake day for new data
+    if (moment().subtract(3, 'days').isBefore(moment(sDate))) {
+        sDate = moment().subtract(4, 'days');
+    }
+    /**/
+
     if (globalThis.AbortAOD && !globalThis.AbortAOD.signal.aborted) {
         globalThis.AbortAOD.abort()
     }
     globalThis.AbortAOD = new AbortController();
 
-    AddImageAOD(sDate.toISOString().split('T')[0], eDate.toISOString().split('T')[0], globalThis.AbortAOD.signal);
-    console.log("Added Image AOD", sDate, "to", eDate);
+    AddImageAOD(sDate.toISOString(true).split('T')[0], eDate.toISOString(true).split('T')[0], globalThis.AbortAOD.signal);
+    console.log("Added Image AOD", sDate.toISOString(true), "to", eDate.toISOString(true));
 
-    globalThis.WeekPicker.setCurrentDate(sDate, false);
 
     let LastAOI = WeekPicker.getYear() == moment().year() && WeekPicker.getWeek() == moment().week();
     VisibleAQI.checked = LastAOI;
