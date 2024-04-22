@@ -1,7 +1,7 @@
 //https://www.jqueryscript.net/time-clock/Week-Picker-Bootstrap-4.html
-(function ($) {
+(function($) {
 
-    $.fn.weekpicker = function () {
+    $.fn.weekpicker = function() {
 
         // Variables
         var currentDate = moment(),
@@ -9,20 +9,20 @@
             selectedYear
 
         // Public functions
-        this.getWeek = function () {
+        this.getWeek = function() {
             return selectedWeek;
         }
 
-        this.getYear = function () {
+        this.getYear = function() {
             return selectedYear;
         }
-        this.getCurrentDate = function () {
+        this.getCurrentDate = function() {
             getCurrentDate($(this).find("input"));
         }
-        this.setCurrentDate = function (date, withTimeLine = true) {
-            setCurrentDate($(this).find("input"), moment(date), withTimeLine);
-        }
-        // Private functions
+        this.setCurrentDate = function(date, withTimeLine = true) {
+                setCurrentDate($(this).find("input"), moment(date), withTimeLine);
+            }
+            // Private functions
         function getCurrentDate(element) {
             return element.data("DateTimePicker").date();
         }
@@ -57,6 +57,7 @@
             selectedYear = year;
 
             element.val("Week " + calendarWeek + ", " + year);
+            ThisWeek.innerHTML = "Week " + calendarWeek + ", " + year;
         }
 
         function createButton(direction, siblingElement) {
@@ -74,7 +75,7 @@
         }
 
         function clickListener(direction, element, inputField) {
-            return element.click(function () {
+            return element.click(function() {
                 if (direction == "next") {
                     var newDate = getCurrentDate(inputField).add(7, 'days');
                 } else if (direction == "previous") {
@@ -84,16 +85,19 @@
             });
         }
 
-        return this.each(function () {
+        return this.each(function() {
             // Append input field to weekpicker
-            $(this).append(`<input type='text'  class='form-control text-center' style='padding:0px;font-weight:bold; cursor:pointer'>
-            <div id="ThisDate" style="background: white; text-align: center; font-size: 12px;">${(new Date()).toISOString().split('T')[0]}`);
+            $(this).append(`<input id="DatePicker" type='text'  style="display:none">
+            <div onclick="$('#DatePicker').data('DateTimePicker').show()">
+            <div id="ThisWeek" class='form-control text-center' style='padding:0px;font-weight:bold; cursor:pointer;width:200px'>Week 0, 0000</div>
+            <div id="ThisDate" style="background: white; text-align: center; font-size: 12px;">${(new Date()).toISOString().split('T')[0]}
+            </div>`);
 
             var weekpickerDiv = $(this);
             var inputField = weekpickerDiv.find("input");
 
             // Append DateTimePicker to weekpicker's input field
-            //https://getdatepicker.com/4/Options/
+            //https://getdatepicker.com/4/
             inputField.datetimepicker({
                 calendarWeeks: true,
                 format: 'DD.MM.YYYY',
@@ -102,18 +106,26 @@
                 defaultDate: currentDate,
                 showTodayButton: true,
                 showClose: true,
-            }).on("dp.change", function (e) {
+            }).on("dp.change", function(e) {
                 // $(this) relates to inputField here
                 var selectedDate = getCurrentDate($(this));
                 setCurrentDate($(this), selectedDate);
-            }).on("dp.show", function () {
+            }).on("dp.show", function() {
                 var currentSelectedDate = getCurrentDate($(this));
                 setCurrentDate($(this), currentSelectedDate);
-            }).on("dp.hide", function () {
+
+                var iToday = document.querySelector("#WeekPicker i.fa.fa-crosshairs");
+                iToday.onclick = () => {
+                    console.log(inputField);
+                    inputField.data("DateTimePicker").date(moment());
+                    setCurrentDate(inputField, currentSelectedDate);
+                };
+            }).on("dp.hide", function() {
                 var currentSelectedDate = getCurrentDate($(this));
                 setCurrentDate($(this), currentSelectedDate);
             });
             // Set initial week & year
+
             setCurrentDate(inputField, currentDate);
 
             // Create next & previous buttons

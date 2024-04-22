@@ -7,30 +7,26 @@
     <!-- Tell IE to use the latest, best version. -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
     <meta name="author" content="Faculty of Environment and Resource Studies, Mahidol University, Thailand">
     <meta name="developer" content="Pisut Nakmuenwai">
 
     <title>ระบบติดตามละอองลอย</title>
     <style>
         @import url(CSS/bucket.css);
-
         #toolbar {
             background: rgba(42, 42, 42, 0.8);
             padding: 4px;
             border-radius: 4px;
         }
-
+        
         #toolbar input {
             vertical-align: middle;
             padding-top: 2px;
             padding-bottom: 2px;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.min.js"
-        integrity="sha512-pLnzlcFjcj9A9ggTfXZyscd+BWAV9pHdDrLekEoTimItxZI3uOAi7CSLXAHGZu7zRgG9Xyhl9bG3A1uRSJJOJg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.min.js" integrity="sha512-pLnzlcFjcj9A9ggTfXZyscd+BWAV9pHdDrLekEoTimItxZI3uOAi7CSLXAHGZu7zRgG9Xyhl9bG3A1uRSJJOJg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
     <script src="Build/Cesium/Cesium.js"></script>
@@ -40,10 +36,8 @@
     <!-- Stylesheet -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
-        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
-        integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
@@ -51,6 +45,7 @@
 
     <link rel="stylesheet" href="/Script/bootstrap-datetimepicker.min.css">
     <script src="/Script/bootstrap-datetimepicker.min.js"></script>
+
     <script src="/Script/bootstrap-weekpicker.js"></script>
 
 
@@ -65,11 +60,8 @@
     </script>
     -->
     <link rel="stylesheet" href="/Build/Cesium/Widgets/Animation/Animation.css">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=K2D:wght@400;700&family=Sarabun:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=K2D:wght@400;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body onload="Main(this)">
@@ -99,8 +91,7 @@
                         <img src="Image/Logo-NASA.png" style="padding: 5px; height: 40px;">
                 </td>
                 <td>
-                    <a href="https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD19A2_GRANULES"
-                        target="GEE">
+                    <a href="https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD19A2_GRANULES" target="GEE">
                         <img src="Image/Logo-GEE.png" style="padding: 5px; height: 40px;">
                 </td>
                 <td>
@@ -139,17 +130,14 @@
         </div>
     </div>
     <div id="Infographic" style="display: none">
-        <span class="material-symbols-outlined" id="InfographicClose"
-            onclick="this.parentElement.style.display = 'none'">
+        <span class="material-symbols-outlined" id="InfographicClose" onclick="this.parentElement.style.display = 'none'">
             cancel
         </span>
         <div id="InfographicTitle">ระบบติดตามละอองลอยในอากาศ</div>
         <div id="InfographicContent" class="container-fluid "></div>
         <div id="InfographicShow">
-            <input type="checkbox" id="InfographicShowAgain" style="float: right;"
-                onchange="localStorage.setItem('skipinfo',this.checked)">
-            <label for="InfographicShowAgain"
-                style="padding-right: 5px;color: black;padding-top: 5px;">ไม่ต้องแสดงหน้านี้ในครั้งถัดไป</label>
+            <input type="checkbox" id="InfographicShowAgain" style="float: right;" onchange="localStorage.setItem('skipinfo',this.checked)">
+            <label for="InfographicShowAgain" style="padding-right: 5px;color: black;padding-top: 5px;">ไม่ต้องแสดงหน้านี้ในครั้งถัดไป</label>
         </div>
     </div>
 </body>

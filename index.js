@@ -43,13 +43,13 @@ let Home = {
     ThisDate: Cesium.JulianDate.fromIso8601(moment().toISOString()),
     //Center: Models[Object.keys(Models)[0]].Center, // for model
     Position: {
-        "x": -1393807.6690063297,
-        "y": 7892416.69940262,
-        "z": 469509.43508834415
+        "x": -1557763.3335331632,
+        "y": 7863606.30927015,
+        "z": 436405.19512673817
     },
     Orientation: {
-        "heading": 6.283185307179585,
-        "pitch": -1.05868944116109,
+        "heading": 6.283185307179582,
+        "pitch": -1.0587170964238677,
         "roll": 6.283185307179586
     },
     Rotate: -1, //-1 = counter-clockwise; +1 would be clockwise
@@ -365,12 +365,12 @@ function Main(body) {
     });
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(
-        function (movement) {
+        function(movement) {
             MoveEnd();
         },
         Cesium.ScreenSpaceEventType.LEFT_DOWN);
     handler.setInputAction(
-        function (movement) {
+        function(movement) {
             //Home.Orientation.heading = viewer.camera.heading;
         },
         Cesium.ScreenSpaceEventType.LEFT_UP);
@@ -420,25 +420,25 @@ function updateMaterial(visualizeRelativeHeight = false) {
             extendUpwards: true,
             extendDownwards: true,
             entries: [{
-                height: height + 100.0,
-                color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
-            },
-            {
-                height: height + 50.0,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-            },
-            {
-                height: height,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
-            },
-            {
-                height: height - 50.0,
-                color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
-            },
-            {
-                height: height - 100.0,
-                color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
-            },
+                    height: height + 100.0,
+                    color: new Cesium.Color(0.0, 1.0, 0.0, alpha * 0.25),
+                },
+                {
+                    height: height + 50.0,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+                },
+                {
+                    height: height,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha),
+                },
+                {
+                    height: height - 50.0,
+                    color: new Cesium.Color(1.0, 1.0, 1.0, alpha * 0.5),
+                },
+                {
+                    height: height - 100.0,
+                    color: new Cesium.Color(1.0, 0.0, 0.0, alpha * 0.25),
+                },
             ],
         };
         viewer.scene.globe.material = Cesium.createElevationBandMaterial({
@@ -453,7 +453,7 @@ function updateMaterial(visualizeRelativeHeight = false) {
 // Make the active imagery layer a subscriber of the viewModel.
 function subscribeLayerParameter(viewModel, name) {
     const imageryLayers = viewer.scene.imageryLayers;
-    Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(function(newValue) {
         if (imageryLayers.length > 0) {
             const layer = imageryLayers.get(0);
             layer[name] = newValue;
