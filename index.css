@@ -9,7 +9,6 @@ li {
 
 @media screen and (max-width: 700px),
 screen and (max-height: 420px) {
-
     .compass,
     .navigation-controls {
         display: block !important;
@@ -149,7 +148,6 @@ label {
     font-weight: bold;
     font-size: 36px;
     text-shadow: 2px 2px 5px #666;
-
 }
 
 #InfographicShow {
@@ -160,7 +158,7 @@ label {
 }
 
 #InfographicContent {
-    height: calc(90vh - 230px);
+    height: calc(88%);
     overflow: auto;
     display: flex;
     flex-flow: wrap;
@@ -209,53 +207,79 @@ label {
 
 @media screen and (max-width: 1024px) {
     #LegendAOD {
-        right: 50px;
+        right: 180px;
+        bottom: 10px;
+    }
+    #Calendar {
+        right: 190px;
         bottom: 60px;
     }
 }
 
 @media screen and (max-width: 700px) {
     #LegendAOD {
-        right: 40px;
+        right: 80px;
+        bottom: 10px;
+    }
+    #Calendar {
+        right: 90px;
         bottom: 60px;
     }
-
-    #Calendar {
-        right: 60px;
-    }
-
     #InfographicTitle {
         font-size: 25px;
+    }
+    #Infographic .card-text {
+        font-size: 0.9rem;
+    }
+    #Infographic .card-title {
+        font-size: 1.1rem;
     }
 }
 
 @media screen and (max-width: 500px) {
     #LegendAOD {
         left: 50%;
-        transform: translate(-50%, -50%);
         right: auto;
-        bottom: 95px;
+        bottom: 40px;
+        transform: translate(-50%, -50%);
     }
-
     #Calendar {
         left: 50%;
-        transform: translate(-50%, -50%);
         right: auto;
-        bottom: 45px;
+        bottom: 85px;
+        transform: translate(-50%, -50%);
     }
-
     #InfographicClose {
         font-size: 32px;
     }
-
     #InfographicTitle {
         font-size: 20px;
     }
 }
 
-
 #Satellite img {
     max-height: 83px;
     width: auto;
     height: auto;
+}
+
+#WeekPicker {
+    width: 200px;
+}
+
+#WeekPicker .bootstrap-datetimepicker-widget {
+    bottom: 90px;
+    inset: -370px auto auto 0px !important;
+}
+
+.bootstrap-datetimepicker-widget.dropdown-menu.bottom:before {
+    display: none;
+}
+
+.bootstrap-datetimepicker-widget.dropdown-menu.bottom:after {
+    display: none;
+}
+
+#ThisDate {
+    cursor: pointer
 }
