@@ -625,7 +625,7 @@ function DetectTimeChange(clock) {
 
     //* fake day for new data
     if (moment().subtract(3, 'days').isBefore(moment(sDate))) {
-        sDate = moment().subtract(4, 'days');
+        sDate = moment().subtract(5, 'days');
     }
     /**/
 
